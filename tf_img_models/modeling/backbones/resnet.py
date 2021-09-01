@@ -80,7 +80,6 @@ class ResNet(Model):
 
         total_layers = 2
         n = 2 if block.expansion == 1 else 3
-        print("n", n)
         for c in cfg:
             total_layers += c * n
         print(f"=> # of layers in ResNet: {total_layers}")
