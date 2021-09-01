@@ -1,2 +1,2 @@
 from .core import *
-from . import data, modeling
+from . import data, modeling, visualization
