@@ -48,3 +48,11 @@ class CosineDecayWithWarmup(LearningRateSchedule):
             tf.less_equal(global_step, self._warmup_steps), warmup_lr, cosine_lr
         )
         return lr
+
+    def get_config(self):
+        return {
+            "cosine_steps": self._cosine_steps,
+            "lr": self._lr,
+            "total_steps": self._total_steps,
+            "warmup_steps": self._warmup_steps,
+        }
