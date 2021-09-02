@@ -1,8 +1,8 @@
 from typing import Tuple, Type, Union
 
-import tensorflow as tf
 from tensorflow.keras import Model, Sequential
-from tensorflow.keras.layers import InputSpec, Layer, MaxPool2D
+from tensorflow.keras.layers import AvgPool2D, InputSpec, Layer, MaxPool2D
+from tensorflow.python.keras.layers.pooling import AvgPool2D
 
 from tf_img_models.modeling.layers import conv2d
 from tf_img_models.modeling.modules import (
@@ -22,6 +22,8 @@ class ResNet(Model):
         - CBAM: Convolutional Block Attention Module
 
     References:
+    - https://arxiv.org/abs/2103.07579
+    - https://arxiv.org/abs/1812.01187
     - https://arxiv.org/abs/1807.06521
     - https://arxiv.org/abs/1807.06514
     - https://arxiv.org/abs/1603.05027
@@ -33,7 +35,7 @@ class ResNet(Model):
 
     def __init__(
         self,
-        img_shape: Tuple[int, int, int],
+        inputs,
         block: Type[Union[ResidualBlock, Bottleneck]],
         cfg: Tuple[int, int, int, int],
         *,
@@ -45,16 +47,15 @@ class ResNet(Model):
         self.groups = groups
         self.base_width = width_per_group
 
-        self.input_spec = InputSpec(shape=(None,) + img_shape)
+        self.input_spec = InputSpec(shape=(None,) + inputs.shape)
 
-        inputs = tf.keras.Input(shape=img_shape)
+        x = conv2d(32, 3, strides=2, weight_decay=weight_decay)(inputs)
+        x = conv2d(32, 3, weight_decay=weight_decay)(x)
+        x = conv2d(64, 3, weight_decay=weight_decay)(x)
 
-        x = conv2d(self.filters, 7, strides=2, weight_decay=weight_decay)(inputs)
-        x = MaxPool2D(3, 2, "same")(x)
-
-        # Layer1: 56x56
+        # Layer1: 112x112
         x = self.__construct_residual_block(
-            block, 64, cfg[0], 1, weight_decay=weight_decay, name="layer1"
+            block, 64, cfg[0], 2, weight_decay=weight_decay, name="layer1"
         )(x)
         if bottleneck_attention:
             x = BottleneckAttentionModule(weight_decay=weight_decay)(x)
@@ -95,11 +96,11 @@ class ResNet(Model):
         name: str = None,
     ) -> Sequential:
         if strides != 1 or self.filters != filters * block.expansion:
-            downsample = conv2d(
-                filters * block.expansion,
-                1,
-                strides=strides,
-                weight_decay=weight_decay,
+            downsample = Sequential(
+                [
+                    AvgPool2D(2, strides, padding="same"),
+                    conv2d(filters * block.expansion, 1, weight_decay=weight_decay),
+                ]
             )
 
         else:
@@ -134,7 +135,7 @@ class ResNet(Model):
 
 
 def resnet18(
-    img_shape: Tuple[int, int, int],
+    inputs,
     *,
     groups: int = 1,
     width_per_group: int = 64,
@@ -145,7 +146,7 @@ def resnet18(
     """ResNet18.
     """
     model = ResNet(
-        img_shape,
+        inputs,
         ResidualBlockCBAM if convolutional_bottleneck_attention else ResidualBlock,
         (2, 2, 2, 2),
         groups=groups,
@@ -157,7 +158,7 @@ def resnet18(
 
 
 def resnet34(
-    img_shape: Tuple[int, int, int],
+    inputs,
     *,
     groups: int = 1,
     width_per_group: int = 64,
@@ -168,7 +169,7 @@ def resnet34(
     """ResNet34.
     """
     model = ResNet(
-        img_shape,
+        inputs,
         ResidualBlockCBAM if convolutional_bottleneck_attention else ResidualBlock,
         (3, 4, 6, 3),
         groups=groups,
@@ -180,7 +181,7 @@ def resnet34(
 
 
 def resnet50(
-    img_shape: Tuple[int, int, int],
+    inputs,
     *,
     groups: int = 1,
     width_per_group: int = 64,
@@ -191,7 +192,7 @@ def resnet50(
     """ResNet50.
     """
     model = ResNet(
-        img_shape,
+        inputs,
         BottleneckCBAM if convolutional_bottleneck_attention else Bottleneck,
         (3, 4, 6, 3),
         groups=groups,
@@ -203,7 +204,7 @@ def resnet50(
 
 
 def resnet101(
-    img_shape: Tuple[int, int, int],
+    inputs,
     *,
     groups: int = 1,
     width_per_group: int = 64,
@@ -214,7 +215,7 @@ def resnet101(
     """ResNet101.
     """
     model = ResNet(
-        img_shape,
+        inputs,
         BottleneckCBAM if convolutional_bottleneck_attention else Bottleneck,
         (3, 4, 23, 3),
         groups=groups,
@@ -226,7 +227,7 @@ def resnet101(
 
 
 def resnet152(
-    img_shape: Tuple[int, int, int],
+    inputs,
     *,
     groups: int = 1,
     width_per_group: int = 64,
@@ -237,7 +238,7 @@ def resnet152(
     """ResNet152.
     """
     model = ResNet(
-        img_shape,
+        inputs,
         BottleneckCBAM if convolutional_bottleneck_attention else Bottleneck,
         (3, 8, 36, 3),
         groups=groups,

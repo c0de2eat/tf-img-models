@@ -15,6 +15,8 @@ Models and layers that are currently implemented.
 
 ### Backbones
 - [ResNet](https://arxiv.org/abs/1512.03385)
+    - [Revisiting ResNets: Improved Training and Scaling Strategies](https://arxiv.org/abs/2103.07579)
+    - [Bag of Tricks for Image Classification with Convolutional Neural Networks](https://arxiv.org/abs/1812.01187)
     - [Pre-activation: Identity Mappings in Deep Residual Networks](https://arxiv.org/abs/1603.05027)
     - External modules
         - BAM
