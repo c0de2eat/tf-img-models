@@ -13,7 +13,7 @@ __all__ = ["bn_relu_dense", "dense"]
 
 def bn_relu_dense(
     units: int,
-    kernel_initializer: Union[str, Initializer] = "he_uniform",
+    kernel_initializer: Union[str, Initializer] = "variance_scaling",
     weight_decay: float = None,
     name: str = None,
 ) -> Sequential:
@@ -33,7 +33,7 @@ def bn_relu_dense(
 
 def dense(
     units: int,
-    kernel_initializer: Union[str, Initializer] = "he_uniform",
+    kernel_initializer: Union[str, Initializer] = "variance_scaling",
     weight_decay: float = None,
     name: str = None,
 ) -> Sequential:

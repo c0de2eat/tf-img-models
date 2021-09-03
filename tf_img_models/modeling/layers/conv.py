@@ -19,7 +19,7 @@ def bn_relu_conv2d(
     padding: str = "same",
     dilation: Union[int, Tuple[int, int]] = (1, 1),
     groups: int = 1,
-    kernel_initializer: Union[str, Initializer] = "he_normal",
+    kernel_initializer: Union[str, Initializer] = "variance_scaling",
     weight_decay: float = None,
     name: str = None
 ):
@@ -51,7 +51,7 @@ def conv2d(
     dilation: Union[int, Tuple[int, int]] = (1, 1),
     groups: int = 1,
     use_bias: bool = True,
-    kernel_initializer: Union[str, Initializer] = "he_normal",
+    kernel_initializer: Union[str, Initializer] = "variance_scaling",
     weight_decay: float = None,
     name: str = None
 ):
