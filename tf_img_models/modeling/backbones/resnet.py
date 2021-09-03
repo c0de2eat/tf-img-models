@@ -53,10 +53,11 @@ class ResNet(Model):
         x = conv2d(32, 3, strides=2, weight_decay=weight_decay)(inputs)
         x = bn_relu_conv2d(32, 3, weight_decay=weight_decay)(x)
         x = bn_relu_conv2d(64, 3, weight_decay=weight_decay)(x)
+        x = bn_relu_conv2d(64, 3, strides=2, weight_decay=weight_decay)(x)
 
         # Layer1: 112x112
         x = self.__construct_residual_block(
-            block, 64, cfg[0], 2, weight_decay=weight_decay, name="layer1"
+            block, 64, cfg[0], 1, weight_decay=weight_decay, name="layer1"
         )(x)
         if bottleneck_attention:
             x = BottleneckAttentionModule(weight_decay=weight_decay)(x)
