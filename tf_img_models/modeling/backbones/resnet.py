@@ -1,7 +1,8 @@
+from tf_img_models.modeling.layers.conv import bn_relu_conv2d
 from typing import Tuple, Type, Union
 
 from tensorflow.keras import Model, Sequential
-from tensorflow.keras.layers import AvgPool2D, InputSpec, Layer, MaxPool2D
+from tensorflow.keras.layers import AvgPool2D, InputSpec, Layer
 from tensorflow.python.keras.layers.pooling import AvgPool2D
 
 from tf_img_models.modeling.layers import conv2d
@@ -50,8 +51,8 @@ class ResNet(Model):
         self.input_spec = InputSpec(shape=(None,) + inputs.shape)
 
         x = conv2d(32, 3, strides=2, weight_decay=weight_decay)(inputs)
-        x = conv2d(32, 3, weight_decay=weight_decay)(x)
-        x = conv2d(64, 3, weight_decay=weight_decay)(x)
+        x = bn_relu_conv2d(32, 3, weight_decay=weight_decay)(x)
+        x = bn_relu_conv2d(64, 3, weight_decay=weight_decay)(x)
 
         # Layer1: 112x112
         x = self.__construct_residual_block(
