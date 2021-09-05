@@ -18,7 +18,7 @@ from tfim import setup_tf, CosineDecayWithWarmup
 from tfim.data import batchify
 from tfim.modeling.backbones import resnet18
 
-os.environ["TF_DETERMINISTIC_OPS"] = "1"
+# os.environ["TF_DETERMINISTIC_OPS"] = "1"
 os.environ["TF_CUDNN_DETERMINISTIC"] = "1"
 random.seed(1234)
 np.random.seed(1234)
