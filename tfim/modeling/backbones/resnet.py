@@ -14,6 +14,7 @@ class ResNet(Model):
     """ResNet.
 
     References:
+    - https://arxiv.org/abs/2103.07579
     - https://arxiv.org/abs/1812.01187
     - https://arxiv.org/abs/1512.03385
     """
@@ -26,24 +27,24 @@ class ResNet(Model):
         block: Type[Union[ResidualBlock, BottleneckBlock]],
         cfg: Tuple[int, int, int, int],
         *,
+        small_input: bool = False,
         weight_decay: float = None,
     ):
         self.input_spec = InputSpec(shape=(None,) + inputs.shape)
 
         # Stem: 56x56
-        x = Sequential(
-            [
-                conv2d_bn_relu(32, 3, strides=2, weight_decay=weight_decay),
-                conv2d_bn_relu(32, 3, weight_decay=weight_decay),
-                conv2d_bn_relu(64, 3, weight_decay=weight_decay),
-                MaxPool2D(3, 2, padding="same"),
-            ],
-            "stem",
-        )(inputs)
+        stem = Sequential(name="stem")
+        if small_input:
+            stem.add(conv2d_bn_relu(64, 3, weight_decay=weight_decay))
+        else:
+            stem.add(conv2d_bn_relu(64, 3, strides=2, weight_decay=weight_decay))
+        stem.add(conv2d_bn_relu(64, 3, weight_decay=weight_decay))
+        stem.add(conv2d_bn_relu(64, 3, weight_decay=weight_decay))
+        x = stem(inputs)
 
         # Layer1: 56x56
         x = self.__construct_residual_block(
-            block, 64, cfg[0], 1, weight_decay=weight_decay, name="layer1"
+            block, 64, cfg[0], 2, weight_decay=weight_decay, name="layer1"
         )(x)
         # if bottleneck_attention:
         #     x = BottleneckAttentionModule(weight_decay=weight_decay)(x)
@@ -112,38 +113,78 @@ class ResNet(Model):
         return layers
 
 
-def resnet18(inputs, *, weight_decay: float = None,) -> Model:
+def resnet18(
+    inputs, *, small_input: bool = False, weight_decay: float = None,
+) -> Model:
     """ResNet18.
     """
-    model = ResNet(inputs, ResidualBlock, (2, 2, 2, 2), weight_decay=weight_decay,)
+    model = ResNet(
+        inputs,
+        ResidualBlock,
+        (2, 2, 2, 2),
+        small_input=small_input,
+        weight_decay=weight_decay,
+    )
     return model
 
 
-def resnet34(inputs, *, weight_decay: float = None,) -> Model:
+def resnet34(
+    inputs, *, small_input: bool = False, weight_decay: float = None,
+) -> Model:
     """ResNet34.
     """
-    model = ResNet(inputs, ResidualBlock, (3, 4, 6, 3), weight_decay=weight_decay,)
+    model = ResNet(
+        inputs,
+        ResidualBlock,
+        (3, 4, 6, 3),
+        small_input=small_input,
+        weight_decay=weight_decay,
+    )
     return model
 
 
-def resnet50(inputs, *, weight_decay: float = None,) -> Model:
+def resnet50(
+    inputs, *, small_input: bool = False, weight_decay: float = None,
+) -> Model:
     """ResNet50.
     """
-    model = ResNet(inputs, BottleneckBlock, (3, 4, 6, 3), weight_decay=weight_decay,)
+    model = ResNet(
+        inputs,
+        BottleneckBlock,
+        (3, 4, 6, 3),
+        small_input=small_input,
+        weight_decay=weight_decay,
+    )
     return model
 
 
-def resnet101(inputs, *, weight_decay: float = None,) -> Model:
+def resnet101(
+    inputs, *, small_input: bool = False, weight_decay: float = None,
+) -> Model:
     """ResNet101.
     """
-    model = ResNet(inputs, BottleneckBlock, (3, 4, 23, 3), weight_decay=weight_decay,)
+    model = ResNet(
+        inputs,
+        BottleneckBlock,
+        (3, 4, 23, 3),
+        small_input=small_input,
+        weight_decay=weight_decay,
+    )
     return model
 
 
-def resnet152(inputs, *, weight_decay: float = None,) -> Model:
+def resnet152(
+    inputs, *, small_input: bool = False, weight_decay: float = None,
+) -> Model:
     """ResNet152.
     """
-    model = ResNet(inputs, BottleneckBlock, (3, 8, 36, 3), weight_decay=weight_decay,)
+    model = ResNet(
+        inputs,
+        BottleneckBlock,
+        (3, 8, 36, 3),
+        small_input=small_input,
+        weight_decay=weight_decay,
+    )
     return model
 
 
