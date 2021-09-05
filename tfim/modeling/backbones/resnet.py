@@ -101,7 +101,12 @@ class ResNet(Model):
 
         for _ in range(1, n_layers):
             layers.add(
-                block(filters, downsample, strides=1, weight_decay=weight_decay,)
+                block(
+                    filters,
+                    Sequential([Identity()]),
+                    strides=1,
+                    weight_decay=weight_decay,
+                )
             )
 
         return layers
