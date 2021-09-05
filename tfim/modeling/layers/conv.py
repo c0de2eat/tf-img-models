@@ -19,6 +19,7 @@ def bn_relu_conv2d(
     groups: int = 1,
     kernel_initializer: str = "glorot_uniform",
     norm_weight_zero_init: bool = False,
+    norm_momentum: float = 0.99,
     weight_decay: float = None,
 ) -> Sequential:
     layers = Sequential(
@@ -35,6 +36,7 @@ def bn_relu_conv2d(
                 dilation_rate=dilation,
                 groups=groups,
                 use_bias=False,
+                momentum=norm_momentum,
                 kernel_initializer=kernel_initializer,
                 kernel_regularizer=L2(weight_decay),
             ),
@@ -78,6 +80,7 @@ def conv2d_bn(
     groups: int = 1,
     kernel_initializer: str = "glorot_uniform",
     norm_weight_zero_init: bool = False,
+    norm_momentum: float = 0.99,
     weight_decay: float = None,
 ) -> Sequential:
     layers = Sequential(
@@ -94,7 +97,9 @@ def conv2d_bn(
                 kernel_regularizer=L2(weight_decay),
             ),
             batch_norm(
-                norm_weight_zero_init=norm_weight_zero_init, weight_decay=weight_decay
+                momentum=norm_momentum,
+                norm_weight_zero_init=norm_weight_zero_init,
+                weight_decay=weight_decay,
             ),
         ]
     )
@@ -111,6 +116,7 @@ def conv2d_bn_relu(
     groups: int = 1,
     kernel_initializer: str = "glorot_uniform",
     norm_weight_zero_init: bool = False,
+    norm_momentum: float = 0.99,
     weight_decay: float = None,
 ) -> Sequential:
     layers = Sequential(
@@ -127,7 +133,9 @@ def conv2d_bn_relu(
                 kernel_regularizer=L2(weight_decay),
             ),
             batch_norm(
-                norm_weight_zero_init=norm_weight_zero_init, weight_decay=weight_decay
+                momentum=norm_momentum,
+                norm_weight_zero_init=norm_weight_zero_init,
+                weight_decay=weight_decay,
             ),
             ReLU(),
         ]

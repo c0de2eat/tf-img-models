@@ -1,7 +1,7 @@
 import tensorflow as tf
+from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Layer
-
-from tf_img_models.modeling.layers import bn_relu_conv2d, bn_relu_dense
+from tfim.modeling.layers import conv2d_bn, conv2d_bn_relu, dense_bn, dense_bn_relu
 
 
 __all__ = ["BottleneckAttentionModule"]
@@ -14,57 +14,59 @@ class ChannelAttention(Layer):
         self._weight_decay = weight_decay
 
     def build(self, input_shape):
-        self.dense1 = bn_relu_dense(
-            input_shape[-1] // self._reduction, weight_decay=self._weight_decay
+        self.f = Sequential(
+            [
+                dense_bn_relu(
+                    input_shape[-1] // self._reduction, weight_decay=self._weight_decay
+                ),
+                dense_bn(input_shape[-1], weight_decay=self._weight_decay),
+            ]
         )
-        self.dense2 = bn_relu_dense(input_shape[-1], weight_decay=self._weight_decay)
         del self._reduction
         del self._weight_decay
 
     def call(self, inputs, training=None):
         x = tf.reduce_mean(inputs, axis=[1, 2])
-        x = self.dense1(x, training)
-        x = self.dense2(x, training)
+        x = self.f(x, training)
         x = tf.expand_dims(x, [1])
         x = tf.expand_dims(x, [1])
         return x
 
 
 class SpatialAttention(Layer):
-    def __init__(
-        self, reduction: int = 16, dilation: int = 4, *, weight_decay: float = None
-    ):
+    def __init__(self, reduction: int = 16, *, weight_decay: float = None):
         super().__init__()
         self._reduction = reduction
-        self._dilation = dilation
         self._weight_decay = weight_decay
 
     def build(self, input_shape):
-        self.conv1 = bn_relu_conv2d(
-            input_shape[-1] // self._reduction, 1, weight_decay=self._weight_decay
+        self.f = Sequential(
+            [
+                conv2d_bn_relu(
+                    input_shape[-1] // self._reduction,
+                    1,
+                    weight_decay=self._weight_decay,
+                ),
+                conv2d_bn_relu(
+                    input_shape[-1] // self._reduction,
+                    3,
+                    dilation=4,
+                    weight_decay=self._weight_decay,
+                ),
+                conv2d_bn_relu(
+                    input_shape[-1] // self._reduction,
+                    3,
+                    dilation=4,
+                    weight_decay=self._weight_decay,
+                ),
+                conv2d_bn(1, 1, weight_decay=self._weight_decay),
+            ]
         )
-        self.conv2 = bn_relu_conv2d(
-            input_shape[-1] // self._reduction,
-            3,
-            dilation=self._dilation,
-            weight_decay=self._weight_decay,
-        )
-        self.conv3 = bn_relu_conv2d(
-            input_shape[-1] // self._reduction,
-            3,
-            dilation=self._dilation,
-            weight_decay=self._weight_decay,
-        )
-        self.conv4 = bn_relu_conv2d(1, 1, weight_decay=self._weight_decay)
         del self._reduction
-        del self._dilation
         del self._weight_decay
 
     def call(self, inputs, training=None):
-        x = self.conv1(inputs, training)
-        x = self.conv2(x, training)
-        x = self.conv3(x, training)
-        x = self.conv4(x, training)
+        x = self.f(inputs, training)
         return x
 
 
@@ -80,15 +82,15 @@ class BottleneckAttentionModule(Layer):
         *,
         channel_reduction: int = 16,
         spatial_reduction: int = 16,
-        spatial_dilation: int = 4,
-        weight_decay: float = None
+        weight_decay: float = None,
+        name: str = None
     ):
-        super().__init__()
+        super().__init__(name=name)
         self.channel_attention = ChannelAttention(
             channel_reduction, weight_decay=weight_decay
         )
         self.spatial_attention = SpatialAttention(
-            spatial_reduction, spatial_dilation, weight_decay=weight_decay
+            spatial_reduction, weight_decay=weight_decay
         )
 
     def call(self, inputs, training=None):
