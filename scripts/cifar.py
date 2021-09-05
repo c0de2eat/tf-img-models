@@ -107,7 +107,7 @@ def main(
 
     with strategy.scope():
         inputs = Input((32, 32, 3))
-        feature_map = resnet18(inputs, weight_decay=weight_decay)(input)
+        feature_map = resnet18(inputs, weight_decay=weight_decay)(inputs)
         features = GlobalAvgPool2D()(feature_map)
         # if dropout is not None:
         #     features = tf.keras.layers.Dropout(dropout)(features)
