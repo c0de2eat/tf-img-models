@@ -11,7 +11,7 @@ from tensorflow.keras.callbacks import (
 )
 from tensorflow.keras.layers import Dense, GlobalAvgPool2D
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import plot_model
 import tensorflow_datasets as tfds
 from tfim import setup_tf, CosineDecayWithWarmup
@@ -27,7 +27,7 @@ tf.random.set_seed(1234)
 
 def main(
     batch_size=128,
-    learning_rate=3e-3,
+    learning_rate=1e-3,
     warmup_epochs=5,
     epochs=50,
     img_height=32,
@@ -52,7 +52,8 @@ def main(
     """
     scale hue, saturation, brightness [0.6, 1.4]
     pca noise normal distribution 0, 0.1
-    xavier uniform init, a= sqrt(6 / (d_in + d_out))
+    AdamW
+    AdamW + wd
     label smoothing
     mixup training
     RandAugment
@@ -92,22 +93,22 @@ def main(
 
     loss_fn = SparseCategoricalCrossentropy(from_logits=True)
 
+    # 0.8715
     strategy = setup_tf(gpus=gpus, mixed_precision_training=True)
-    # nesterov accelerated gradient NAG descent
-    optimizer = SGD(
+    optimizer = Adam(
         CosineDecayWithWarmup(
             learning_rate,
             warmup_epochs=warmup_epochs,
             total_epochs=epochs,
             steps_per_epoch=len(train_loader),
-        ),
-        momentum=0.9,
-        nesterov=True,
+        )
     )
 
     with strategy.scope():
         inputs = Input((32, 32, 3))
-        feature_map = resnet18(inputs, weight_decay=weight_decay)(inputs)
+        feature_map = resnet18(inputs, small_input=True, weight_decay=weight_decay)(
+            inputs
+        )
         features = GlobalAvgPool2D()(feature_map)
         # if dropout is not None:
         #     features = tf.keras.layers.Dropout(dropout)(features)
