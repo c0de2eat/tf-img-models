@@ -1,7 +1,8 @@
 from typing import Tuple, Type, Union
 
 from tensorflow.keras import Model, Sequential
-from tensorflow.keras.layers import AvgPool2D, InputSpec, Layer, MaxPool2D
+from tensorflow.keras.activations import linear
+from tensorflow.keras.layers import AvgPool2D, InputSpec, MaxPool2D
 from tfim.modeling.layers import conv2d_bn, conv2d_bn_relu
 from tfim.modeling.modules import ResidualBlock, BottleneckBlock
 
@@ -90,21 +91,18 @@ class ResNet(Model):
                 ]
             )
         else:
-            downsample = Layer()
+            downsample = Sequential([linear])
 
         layers = Sequential(name=name)
         layers.add(
-            block(
-                filters,
-                strides=strides,
-                downsample=downsample,
-                weight_decay=weight_decay,
-            )
+            block(filters, downsample, strides=strides, weight_decay=weight_decay,)
         )
         self.filters *= block.expansion
 
         for _ in range(1, n_layers):
-            layers.add(block(filters, strides=1, weight_decay=weight_decay,))
+            layers.add(
+                block(filters, downsample, strides=1, weight_decay=weight_decay,)
+            )
 
         return layers
 

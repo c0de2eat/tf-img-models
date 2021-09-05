@@ -1,14 +1,15 @@
 from typing import Tuple, Union
 
 import tensorflow as tf
-import tensorflow.keras as keras
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Layer
 from tfim.modeling.layers import conv2d_bn, conv2d_bn_relu
 
 
 __all__ = ["ResidualBlock", "BottleneckBlock"]
 
 
-class ResidualBlock(keras.layers.Layer):
+class ResidualBlock(Layer):
     """Residual block.
 
     References:
@@ -21,9 +22,9 @@ class ResidualBlock(keras.layers.Layer):
     def __init__(
         self,
         filters: int,
+        downsample: Sequential,
         *,
         strides: Union[int, Tuple[int, int]] = 1,
-        downsample: keras.layers.Layer = keras.layers.Layer(),
         weight_decay: float = None,
         name: str = None,
     ):
@@ -46,7 +47,7 @@ class ResidualBlock(keras.layers.Layer):
         return x
 
 
-class BottleneckBlock(keras.layers.Layer):
+class BottleneckBlock(Layer):
     """Bottleneck block.
 
     References:
@@ -59,9 +60,9 @@ class BottleneckBlock(keras.layers.Layer):
     def __init__(
         self,
         filters: int,
+        downsample: Sequential,
         *,
         strides: Union[int, Tuple[int, int]] = 1,
-        downsample: keras.layers.Layer = keras.layers.Layer(),
         weight_decay: float = None,
         name: str = None,
     ):
