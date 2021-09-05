@@ -3,6 +3,7 @@ import random
 
 import numpy as np
 import tensorflow as tf
+import tensorflow_addons as tfa
 from tensorflow.keras import Input, Model
 from tensorflow.keras.callbacks import (
     CSVLogger,
@@ -33,6 +34,7 @@ def main(
     img_height=32,
     img_width=32,
     weight_decay=1e-4,
+    dropout=0.25,
     data_dir="/home/xz/workspace/datasets/tfds",
     out_dir="output",
     gpus=0,
@@ -52,8 +54,6 @@ def main(
     """
     scale hue, saturation, brightness [0.6, 1.4]
     pca noise normal distribution 0, 0.1
-    AdamW
-    AdamW + wd
     label smoothing
     mixup training
     RandAugment
@@ -93,7 +93,6 @@ def main(
 
     loss_fn = SparseCategoricalCrossentropy(from_logits=True)
 
-    # 0.8715
     strategy = setup_tf(gpus=gpus, mixed_precision_training=True)
     optimizer = Adam(
         CosineDecayWithWarmup(
@@ -106,16 +105,23 @@ def main(
 
     with strategy.scope():
         inputs = Input((32, 32, 3))
-        feature_map = resnet18(inputs, small_input=True, weight_decay=weight_decay)(
-            inputs
+        backbone = resnet18(
+            inputs,
+            small_input=True,
+            bottleneck_attention=True,
+            convolutional_bottleneck_attention=True,
+            weight_decay=weight_decay,
         )
+        feature_map = backbone(inputs)
         features = GlobalAvgPool2D()(feature_map)
         # if dropout is not None:
         #     features = tf.keras.layers.Dropout(dropout)(features)
         outputs = Dense(10, name="classifier")(features)
         model = Model(inputs=inputs, outputs=outputs)
         model.compile(optimizer=optimizer, loss=loss_fn, metrics=["accuracy"])
-
+    plot_model(
+        backbone, os.path.join(out_dir, "backbone.png"), True, show_layer_names=True
+    )
     plot_model(model, os.path.join(out_dir, "model.png"), True, show_layer_names=True)
 
     callbacks = [
