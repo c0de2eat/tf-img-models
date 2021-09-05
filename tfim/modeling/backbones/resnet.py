@@ -42,8 +42,9 @@ class ResNet(Model):
         x = stem(inputs)
 
         # Layer1: 56x56
+        first_stride = 1 if small_input else 2
         x = self.__construct_residual_block(
-            block, 64, cfg[0], 2, weight_decay=weight_decay, name="layer1"
+            block, 64, cfg[0], first_stride, weight_decay=weight_decay, name="layer1"
         )(x)
         # if bottleneck_attention:
         #     x = BottleneckAttentionModule(weight_decay=weight_decay)(x)
