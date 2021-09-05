@@ -1,7 +1,6 @@
 from typing import Tuple, Type, Union
 
 from tensorflow.keras import Model, Sequential
-from tensorflow.keras.activations import linear
 from tensorflow.keras.layers import AvgPool2D, InputSpec
 from tfim.modeling.layers import conv2d_bn, conv2d_bn_relu, Identity
 from tfim.modeling.modules import ResidualBlock, BottleneckBlock
