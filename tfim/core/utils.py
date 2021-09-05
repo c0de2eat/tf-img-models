@@ -1,6 +1,7 @@
 from typing import List, Union
 
 import tensorflow as tf
+from tensorflow.keras.mixed_precision import set_global_policy
 
 
 __all__ = ["setup_tf"]
@@ -53,6 +54,6 @@ def setup_tf(
 
     if mixed_precision_training:
         print("  >> Using mixed precision")
-        tf.keras.mixed_precision.set_global_policy("mixed_float16")
+        set_global_policy("mixed_float16")
 
     return tf.distribute.MirroredStrategy()
