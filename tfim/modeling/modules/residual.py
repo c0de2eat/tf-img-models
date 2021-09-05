@@ -41,7 +41,7 @@ class ResidualBlock(Layer):
     def call(self, inputs, training=None):
         x = self.conv1(inputs, training)
         x = self.conv2(x, training)
-        identity = self.downsample(inputs)
+        identity = self.downsample(inputs, training)
         x = tf.add(x, identity)
         x = tf.nn.relu(x)
         return x
@@ -84,7 +84,7 @@ class BottleneckBlock(Layer):
         x = self.conv1(inputs, training)
         x = self.conv2(x, training)
         x = self.conv3(x, training)
-        identity = self.downsample(inputs)
+        identity = self.downsample(inputs, training)
         x = tf.add(x, identity)
         x = tf.nn.relu(x)
         return x
