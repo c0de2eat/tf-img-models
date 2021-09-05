@@ -2,7 +2,7 @@ from typing import Tuple, Type, Union
 
 from tensorflow.keras import Model, Sequential
 from tensorflow.keras.layers import AvgPool2D, InputSpec, Layer, MaxPool2D
-from tfim.modeling.layers import conv2d_bn_relu
+from tfim.modeling.layers import conv2d_bn, conv2d_bn_relu
 from tfim.modeling.modules import ResidualBlock, BottleneckBlock
 
 
@@ -86,9 +86,7 @@ class ResNet(Model):
             downsample = Sequential(
                 [
                     AvgPool2D(2, strides, padding="same"),
-                    conv2d_bn_relu(
-                        filters * block.expansion, 1, weight_decay=weight_decay
-                    ),
+                    conv2d_bn(filters * block.expansion, 1, weight_decay=weight_decay),
                 ]
             )
         else:
