@@ -9,7 +9,7 @@ from tf_img_models.modeling.modules import ConvolutionalBottleneckAttentionModul
 __all__ = ["ResidualBlock", "ResidualBlockCBAM", "Bottleneck", "BottleneckCBAM"]
 
 
-class ResidualBlock(Layer):
+class ResidualBlockV2(Layer):
     """Residual block.
 
     References:
@@ -54,7 +54,7 @@ class ResidualBlock(Layer):
         return x
 
 
-class ResidualBlockCBAM(ResidualBlock):
+class ResidualBlockV2CBAM(ResidualBlockV2):
     """Residual block + CBAM.
 
     References:
@@ -100,7 +100,7 @@ class ResidualBlockCBAM(ResidualBlock):
         return x
 
 
-class Bottleneck(Layer):
+class BottleneckV2(Layer):
     """Bottleneck block.
 
     Design follows [2] where `strides=2` in the 3x3 convolution instead of the first 1x1
@@ -156,7 +156,7 @@ class Bottleneck(Layer):
         return x
 
 
-class BottleneckCBAM(Bottleneck):
+class BottleneckV2CBAM(BottleneckV2):
     """Bottleneck block + CBAM.
 
     References:

@@ -2,7 +2,7 @@ import setuptools
 
 
 setuptools.setup(
-    name="tf_img_models",
+    name="tfim",
     version="0.0.1",
     author="xingzhaolee",
     description="TensorFlow common codes for computer vision related tasks.",
