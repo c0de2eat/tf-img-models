@@ -1,5 +1,6 @@
-import tensorflow.keras as keras
-
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense, ReLU
+from tensorflow.keras.regularizers import L2
 from tfim.modeling.layers import batch_norm
 
 
@@ -11,16 +12,16 @@ def dense_bn_relu(
     # kernel_initializer: str = "variance_scaling",
     kernel_initializer: str = "glorot_uniform",
     weight_decay: float = None,
-) -> keras.Sequential:
-    layers = keras.Sequential()
-    layers.add(batch_norm(weight_decay))
-    layers.add(keras.layers.ReLU())
+) -> Sequential:
+    layers = Sequential()
+    layers.add(batch_norm(weight_decay=weight_decay))
+    layers.add(ReLU())
     layers.add(
-        keras.layers.Dense(
+        Dense(
             units,
             use_bias=False,
             kernel_initializer=kernel_initializer,
-            kernel_regularizer=keras.regularizers.l2(weight_decay),
+            kernel_regularizer=L2(weight_decay),
         )
     )
     return layers
@@ -31,10 +32,10 @@ def dense(
     # kernel_initializer: str = "variance_scaling",
     kernel_initializer: str = "glorot_uniform",
     weight_decay: float = None,
-) -> keras.layers.Dense:
-    layers = keras.layers.Dense(
+) -> Dense:
+    layers = Dense(
         units,
         kernel_initializer=kernel_initializer,
-        kernel_regularizer=keras.regularizers.l2(weight_decay),
+        kernel_regularizer=L2(weight_decay),
     )
     return layers

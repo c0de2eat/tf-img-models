@@ -1,6 +1,8 @@
 from typing import Tuple, Union
 
-import tensorflow.keras as keras
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Conv2D, ReLU
+from tensorflow.keras.regularizers import L2
 from tfim.modeling.layers import batch_norm
 
 
@@ -19,12 +21,14 @@ def bn_relu_conv2d(
     kernel_initializer: str = "glorot_uniform",
     norm_weight_zero_init: bool = False,
     weight_decay: float = None,
-) -> keras.Sequential:
-    layers = keras.Sequential(
+) -> Sequential:
+    layers = Sequential(
         [
-            batch_norm(weight_decay, norm_weight_zero_init),
-            keras.layers.ReLU(),
-            keras.layers.Conv2D(
+            batch_norm(
+                norm_weight_zero_init=norm_weight_zero_init, weight_decay=weight_decay
+            ),
+            ReLU(),
+            Conv2D(
                 filters,
                 kernel_size,
                 strides,
@@ -33,7 +37,7 @@ def bn_relu_conv2d(
                 groups=groups,
                 use_bias=False,
                 kernel_initializer=kernel_initializer,
-                kernel_regularizer=keras.regularizers.l2(weight_decay),
+                kernel_regularizer=L2(weight_decay),
             ),
         ]
     )
@@ -52,8 +56,8 @@ def conv2d(
     # kernel_initializer: str = "variance_scaling",
     kernel_initializer: str = "glorot_uniform",
     weight_decay: float = None,
-) -> keras.layers.Conv2D:
-    return keras.layers.Conv2D(
+) -> Conv2D:
+    return Conv2D(
         filters,
         kernel_size,
         strides,
@@ -62,7 +66,7 @@ def conv2d(
         groups=groups,
         use_bias=use_bias,
         kernel_initializer=kernel_initializer,
-        kernel_regularizer=keras.regularizers.l2(weight_decay),
+        kernel_regularizer=L2(weight_decay),
     )
 
 
@@ -78,10 +82,10 @@ def conv2d_bn(
     kernel_initializer: str = "glorot_uniform",
     norm_weight_zero_init: bool = False,
     weight_decay: float = None,
-) -> keras.Sequential:
-    layers = keras.Sequential(
+) -> Sequential:
+    layers = Sequential(
         [
-            keras.layers.Conv2D(
+            Conv2D(
                 filters,
                 kernel_size,
                 strides,
@@ -90,9 +94,11 @@ def conv2d_bn(
                 groups=groups,
                 use_bias=False,
                 kernel_initializer=kernel_initializer,
-                kernel_regularizer=keras.regularizers.l2(weight_decay),
+                kernel_regularizer=L2(weight_decay),
             ),
-            batch_norm(weight_decay, norm_weight_zero_init),
+            batch_norm(
+                norm_weight_zero_init=norm_weight_zero_init, weight_decay=weight_decay
+            ),
         ]
     )
     return layers
@@ -110,10 +116,10 @@ def conv2d_bn_relu(
     kernel_initializer: str = "glorot_uniform",
     norm_weight_zero_init: bool = False,
     weight_decay: float = None,
-) -> keras.Sequential:
-    layers = keras.Sequential(
+) -> Sequential:
+    layers = Sequential(
         [
-            keras.layers.Conv2D(
+            Conv2D(
                 filters,
                 kernel_size,
                 strides,
@@ -122,10 +128,12 @@ def conv2d_bn_relu(
                 groups=groups,
                 use_bias=False,
                 kernel_initializer=kernel_initializer,
-                kernel_regularizer=keras.regularizers.l2(weight_decay),
+                kernel_regularizer=L2(weight_decay),
             ),
-            batch_norm(weight_decay, norm_weight_zero_init),
-            keras.layers.ReLU(),
+            batch_norm(
+                norm_weight_zero_init=norm_weight_zero_init, weight_decay=weight_decay
+            ),
+            ReLU(),
         ]
     )
     return layers
