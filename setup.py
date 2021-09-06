@@ -17,11 +17,9 @@ setuptools.setup(
     ],
     packages=setuptools.find_packages(),
     install_requires=[
-        "cython",
         "tensorflow_datasets",
         "tensorflow_addons",
-        "matplotlib",
-        "opencv-python",
+        "opencv-python-headless",
         "pydot",
         "tqdm",
     ],
