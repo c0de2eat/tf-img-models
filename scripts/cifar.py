@@ -112,10 +112,10 @@ def main(
             # convolutional_bottleneck_attention=True,
             weight_decay=weight_decay,
         )
-        feature_map = backbone(x)
+        feature_map = backbone(inputs)
         features = GlobalAvgPool2D()(feature_map)
-        # if dropout is not None:
-        #     features = tf.keras.layers.Dropout(dropout)(features)
+        if dropout is not None:
+            features = tf.keras.layers.Dropout(dropout)(features)
         outputs = Dense(10, name="classifier")(features)
         model = Model(inputs=inputs, outputs=outputs)
         model.compile(optimizer=optimizer, loss=loss_fn, metrics=["accuracy"])
