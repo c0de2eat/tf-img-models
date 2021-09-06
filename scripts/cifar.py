@@ -3,7 +3,7 @@ import random
 
 import numpy as np
 import tensorflow as tf
-import tensorflow_addons as tfa
+
 from tensorflow.keras import Input, Model
 from tensorflow.keras.callbacks import (
     CSVLogger,
@@ -19,11 +19,11 @@ from tfim import setup_tf, CosineDecayWithWarmup
 from tfim.data import batchify
 from tfim.modeling.backbones import resnet18
 
-# os.environ["TF_DETERMINISTIC_OPS"] = "1"
+os.environ["TF_DETERMINISTIC_OPS"] = "1"
 os.environ["TF_CUDNN_DETERMINISTIC"] = "1"
-random.seed(1234)
-np.random.seed(1234)
-tf.random.set_seed(1234)
+random.seed(2554766)
+np.random.seed(2554766)
+tf.random.set_seed(2554766)
 
 
 def main(
@@ -35,7 +35,7 @@ def main(
     img_width=32,
     weight_decay=1e-4,
     dropout=0.25,
-    data_dir="/home/xz/workspace/datasets/tfds",
+    data_dir="/datasets",
     out_dir="output",
     gpus=0,
 ):
@@ -61,15 +61,14 @@ def main(
 
     def process_train(img, label):
         img = tf.image.random_flip_left_right(img)
-        img = tf.image.pad_to_bounding_box(img, 6, 6, img_height + 12, img_width + 12)
+        img = tf.image.pad_to_bounding_box(img, 2, 2, img_height + 4, img_width + 4)
         img = tf.image.random_crop(img, (img_height, img_width, 3))
-        img = tf.image.resize_with_pad(img, img_height, img_width)
-        img = tf.image.convert_image_dtype(img, tf.float32)
+        img = tf.divide(tf.cast(img, tf.float32), 255.0)
         return img, label
 
     def process_val(img, label):
         img = tf.image.resize_with_pad(img, img_height, img_width)
-        img = tf.image.convert_image_dtype(img, tf.float32)
+        img = tf.divide(tf.cast(img, tf.float32), 255.0)
         return img, label
 
     train_dataset, val_dataset = tfds.load(
@@ -105,14 +104,15 @@ def main(
 
     with strategy.scope():
         inputs = Input((32, 32, 3))
+
         backbone = resnet18(
             inputs,
             small_input=True,
-            bottleneck_attention=True,
-            convolutional_bottleneck_attention=True,
+            # bottleneck_attention=True,
+            # convolutional_bottleneck_attention=True,
             weight_decay=weight_decay,
         )
-        feature_map = backbone(inputs)
+        feature_map = backbone(x)
         features = GlobalAvgPool2D()(feature_map)
         # if dropout is not None:
         #     features = tf.keras.layers.Dropout(dropout)(features)
