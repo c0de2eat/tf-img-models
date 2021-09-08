@@ -96,8 +96,8 @@ class BottleneckAttentionModule(Layer):
     def call(self, inputs, training=None):
         x_c = self.channel_attention(inputs, training)
         x_a = self.spatial_attention(inputs, training)
-        x = tf.add(x_c, x_a)
+        x = tf.multiply(x_c, x_a)
         x = tf.nn.sigmoid(x)
+        x = tf.add(x, 1)
         x = tf.multiply(x, inputs)
-        x = tf.add(x, inputs)
         return x
