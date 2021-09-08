@@ -20,6 +20,7 @@ setuptools.setup(
         "tensorflow_datasets",
         "tensorflow_addons",
         "opencv-python-headless",
+        "albumentations",
         "pydot",
         "tqdm",
     ],
