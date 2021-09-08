@@ -9,7 +9,7 @@ def batchify(
 ) -> tf.data.Dataset:
     if shuffle:
         n = len(dataset)
-        dataset = dataset.shuffle(n, reshuffle_each_iteration=True)
+        dataset = dataset.shuffle(n // 10, reshuffle_each_iteration=True)
     dataset = dataset.batch(batch_size)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
     return dataset
