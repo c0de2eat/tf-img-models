@@ -1,6 +1,11 @@
-# tf_img_models
+# TF Image Models
 TensorFlow common codes for computer vision related tasks.
-TensorFlow utility library with implementation of models for image related tasks. Please note that the implementation is based on my best understanding and there is no guarantee that it is absolutely correct.
+TensorFlow utility library with implementation of models for image related tasks. Please note that the implementation is based on my best understanding if official is not available and there is no guarantee that it is absolutely correct.
+
+Folder structure:
+- `docker` contains the `Dockerfile` mainly for development purposes.
+- `tfim` contains all the implemented codes.
+- `scripts` contains the script to test the implementation on CIFAR10.
 
 ---
 
@@ -8,20 +13,13 @@ TensorFlow utility library with implementation of models for image related tasks
 Models and layers that are currently implemented.
 
 ### Modules
-- Residual modules from ResNet
 - Attentions
     - [Bottleneck Attention Module (BAM)](https://arxiv.org/abs/1807.06514)
     - [Convolutional Block Attention Module (CBAM)](https://arxiv.org/abs/1807.06521)
 
 ### Backbones
 - [ResNet](https://arxiv.org/abs/1512.03385)
-    - [Revisiting ResNets: Improved Training and Scaling Strategies](https://arxiv.org/abs/2103.07579)
-    - [Bag of Tricks for Image Classification with Convolutional Neural Networks](https://arxiv.org/abs/1812.01187)
-    - [Pre-activation: Identity Mappings in Deep Residual Networks](https://arxiv.org/abs/1603.05027)
-    - External modules
-        - BAM
-        - CBAM
-        - BAM + CBAM
+    <!-- - [Pre-activation: Identity Mappings in Deep Residual Networks](https://arxiv.org/abs/1603.05027) -->
 
 <!-- ### Architectures
 - [Feature Pyramid Networks (FPN) for Object Detection](https://arxiv.org/abs/1612.03144)
@@ -29,26 +27,9 @@ Models and layers that are currently implemented.
 
 ---
 
-## Others
-### Training
-- Cosine decay scheduler with warmup
-
-### Data
-- Common data related functions such as batching the dataset and etc.
-
----
-
-## Build
-### Docker image
-Build the docker image for `tf_img_models`.
+## Install
+Run the following command to install `tfim` package in the current Python environment.
 
 ```bash
-docker build -t tf_img_models -f docker/Dockerfile  .
-```
-
-### Python
-Run the following command to install `tf_img_models` package in the current Python environment.
-
-```bash
-pip install -e .
+pip install git+https://github.com/c0de2eat/tf-img-models
 ```
