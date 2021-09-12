@@ -185,6 +185,9 @@ if __name__ == "__main__":
     # ==================================================================================
     # Data
     # ==================================================================================
+    parser.add_argument(
+        "-b", "--batch-size", default=64, type=int, help="Batch size per GPU."
+    )
     parser.add_argument("--img-height", default=224, type=int, help="Image height.")
     parser.add_argument("--img-width", default=224, type=int, help="Image width.")
     # ==================================================================================
@@ -192,9 +195,6 @@ if __name__ == "__main__":
     # ==================================================================================
     # Directories
     # ==================================================================================
-    parser.add_argument(
-        "-b", "--batch-size", default=64, type=int, help="Batch size per GPU."
-    )
     parser.add_argument(
         "--data-dir", type=str, required=True, help="TFDS root directory."
     )
