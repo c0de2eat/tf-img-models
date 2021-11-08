@@ -15,7 +15,9 @@ def class_activation_map(
 ) -> List:
     img_size = img.shape[:-1]
     cam = np.zeros(dtype=np.float, shape=feature_map.shape[0:2])
-    cam += np.sum(feature_map * np.squeeze(classifier_weights[:, prediction]), -1)
+    cam += np.sum(
+        feature_map * np.squeeze(classifier_weights[:, prediction]), -1
+    )
     cam /= np.max(cam)
     cam = cv2.resize(cam, img_size)
     heatmap = cv2.applyColorMap(np.int(255 * cam), cv2.COLORMAP_JET)

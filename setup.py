@@ -7,7 +7,9 @@ setuptools.setup(
     author="c0de2eat",
     description="TensorFlow common codes for computer vision related tasks.",
     url="https://github.com/c0de2eat/tf-img-models",
-    project_urls={"Bug Tracker": "https://github.com/c0de2eat/tf-img-models/issues",},
+    project_urls={
+        "Bug Tracker": "https://github.com/c0de2eat/tf-img-models/issues",
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -22,5 +24,5 @@ setuptools.setup(
         "scikit-learn",
         "tqdm",
     ],
-    python_requires=">=3.8.10",
+    python_requires=">=3.8.8",
 )
