@@ -15,42 +15,6 @@ __all__ = [
 ]
 
 
-def conv2d_bn_relu(
-    filters: int,
-    kernel_size: Union[int, Tuple[int, int]],
-    *,
-    strides: Union[int, Tuple[int, int]] = (1, 1),
-    padding: str = "same",
-    dilation: Union[int, Tuple[int, int]] = (1, 1),
-    groups: int = 1,
-    kernel_initializer: str = "glorot_uniform",
-    norm_weight_zero_init: bool = False,
-    weight_decay: float = None,
-    name: str = None,
-) -> Sequential:
-    return Sequential(
-        [
-            Conv2D(
-                filters,
-                kernel_size,
-                strides,
-                padding,
-                dilation_rate=dilation,
-                groups=groups,
-                use_bias=False,
-                kernel_initializer=kernel_initializer,
-                kernel_regularizer=L2(weight_decay),
-            ),
-            batch_norm(
-                norm_weight_zero_init=norm_weight_zero_init,
-                weight_decay=weight_decay,
-            ),
-            ReLU(),
-        ],
-        name=name,
-    )
-
-
 def conv2d_ibn_relu(
     filters: int,
     kernel_size: Union[int, Tuple[int, int]],
@@ -76,7 +40,9 @@ def conv2d_ibn_relu(
                 kernel_initializer=kernel_initializer,
                 kernel_regularizer=L2(weight_decay),
             ),
-            InstanceBatchNorm(weight_decay=weight_decay,),
+            InstanceBatchNorm(
+                weight_decay=weight_decay,
+            ),
             ReLU(),
         ],
         name=name,

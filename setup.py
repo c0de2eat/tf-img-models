@@ -17,12 +17,8 @@ setuptools.setup(
     ],
     packages=setuptools.find_packages(),
     install_requires=[
-        "tensorflow_datasets",
         "tensorflow_addons",
-        "opencv-python-headless",
         "pydot",
-        "scikit-learn",
-        "tqdm",
     ],
     python_requires=">=3.8.8",
 )

@@ -10,7 +10,14 @@ from tfim.modeling.modules import (
 )
 
 
-__all__ = ["resnet18", "resnet34", "resnet50", "resnet101", "resnet152", "ResNet"]
+__all__ = [
+    "resnet18",
+    "resnet34",
+    "resnet50",
+    "resnet101",
+    "resnet152",
+    "ResNet",
+]
 
 
 class ResNet(Model):
@@ -31,14 +38,13 @@ class ResNet(Model):
         cbam: bool = False,
         weight_decay: float = None,
     ):
-        self.input_spec = InputSpec(shape=(None,) + inputs.shape)
-
-        # Stem: 56x56
         stem = Sequential(name="stem")
         if small_input:
             stem.add(conv2d_bn_relu(64, 3, weight_decay=weight_decay))
         else:
-            stem.add(conv2d_bn_relu(64, 3, strides=2, weight_decay=weight_decay))
+            stem.add(
+                conv2d_bn_relu(64, 3, strides=2, weight_decay=weight_decay)
+            )
         stem.add(conv2d_bn_relu(64, 3, weight_decay=weight_decay))
         stem.add(conv2d_bn_relu(64, 3, weight_decay=weight_decay))
         x = stem(inputs)
@@ -60,7 +66,9 @@ class ResNet(Model):
             name="layer1",
         )
         if bam:
-            x = BottleneckAttentionModule(weight_decay=weight_decay, name="bam1")(x)
+            x = BottleneckAttentionModule(
+                weight_decay=weight_decay, name="bam1"
+            )(x)
 
         # Layer2: 28x28
         x = self.__construct_residual_block(
@@ -78,7 +86,9 @@ class ResNet(Model):
             name="layer2",
         )
         if bam:
-            x = BottleneckAttentionModule(weight_decay=weight_decay, name="bam2")(x)
+            x = BottleneckAttentionModule(
+                weight_decay=weight_decay, name="bam2"
+            )(x)
 
         # Layer3: 14x14
         x = self.__construct_residual_block(
@@ -96,7 +106,9 @@ class ResNet(Model):
             name="layer3",
         )
         if bam:
-            x = BottleneckAttentionModule(weight_decay=weight_decay, name="bam3")(x)
+            x = BottleneckAttentionModule(
+                weight_decay=weight_decay, name="bam3"
+            )(x)
 
         # Layer4: 7x7
         x = self.__construct_residual_block(
@@ -142,7 +154,9 @@ class ResNet(Model):
             downsample = Sequential(
                 [
                     AvgPool2D(2, strides, padding="same"),
-                    conv2d_bn(filters * expansion, 1, weight_decay=weight_decay),
+                    conv2d_bn(
+                        filters * expansion, 1, weight_decay=weight_decay
+                    ),
                 ],
                 name=f"{name}_downsample",
             )

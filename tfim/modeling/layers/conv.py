@@ -4,22 +4,22 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Conv2D, ReLU
 from tensorflow.keras.regularizers import L2
 
-from .norm import batch_norm
+from tfim.modeling.layers.norm import batch_norm
 
 
-__all__ = ["conv2d"]
+__all__ = ["conv2d", "conv2d_bn", "conv2d_bn_relu", "conv2d_relu"]
 
 
 def conv2d(
     filters: int,
     kernel_size: Union[int, Tuple[int, int]],
     strides: Union[int, Tuple[int, int]] = (1, 1),
-    padding="valid",
+    padding="same",
     dilation_rate: Union[int, Tuple[int, int]] = (1, 1),
     groups=1,
     use_bias=True,
     kernel_initializer="glorot_uniform",
-    weight_decay: float = None,
+    weight_decay: float = 0.0,
     name: str = None,
 ) -> Conv2D:
     return Conv2D(
@@ -40,13 +40,13 @@ def conv2d_bn(
     filters: int,
     kernel_size: Union[int, Tuple[int, int]],
     strides: Union[int, Tuple[int, int]] = (1, 1),
-    padding="valid",
+    padding="same",
     dilation_rate: Union[int, Tuple[int, int]] = (1, 1),
     groups=1,
     use_bias=True,
     kernel_initializer="glorot_uniform",
     norm_weight_zero_init: bool = False,
-    weight_decay: float = None,
+    weight_decay: float = 0.0,
     name: str = None,
 ) -> Sequential:
     return Sequential(
@@ -61,13 +61,13 @@ def conv2d_bn(
                 use_bias,
                 kernel_initializer,
                 weight_decay,
-                name,
             ),
             batch_norm(
                 norm_weight_zero_init=norm_weight_zero_init,
                 weight_decay=weight_decay,
             ),
-        ]
+        ],
+        name,
     )
 
 
@@ -75,13 +75,13 @@ def conv2d_bn_relu(
     filters: int,
     kernel_size: Union[int, Tuple[int, int]],
     strides: Union[int, Tuple[int, int]] = (1, 1),
-    padding="valid",
+    padding="same",
     dilation_rate: Union[int, Tuple[int, int]] = (1, 1),
     groups=1,
     use_bias=True,
     kernel_initializer="glorot_uniform",
     norm_weight_zero_init: bool = False,
-    weight_decay: float = None,
+    weight_decay: float = 0.0,
     name: str = None,
 ) -> Sequential:
     return Sequential(
@@ -96,14 +96,14 @@ def conv2d_bn_relu(
                 use_bias,
                 kernel_initializer,
                 weight_decay,
-                name,
             ),
             batch_norm(
                 norm_weight_zero_init=norm_weight_zero_init,
                 weight_decay=weight_decay,
             ),
             ReLU(),
-        ]
+        ],
+        name,
     )
 
 
@@ -111,13 +111,12 @@ def conv2d_relu(
     filters: int,
     kernel_size: Union[int, Tuple[int, int]],
     strides: Union[int, Tuple[int, int]] = (1, 1),
-    padding="valid",
+    padding="same",
     dilation_rate: Union[int, Tuple[int, int]] = (1, 1),
     groups=1,
     use_bias=True,
     kernel_initializer="glorot_uniform",
-    norm_weight_zero_init: bool = False,
-    weight_decay: float = None,
+    weight_decay: float = 0.0,
     name: str = None,
 ) -> Sequential:
     return Sequential(
@@ -132,8 +131,8 @@ def conv2d_relu(
                 use_bias,
                 kernel_initializer,
                 weight_decay,
-                name,
             ),
             ReLU(),
-        ]
+        ],
+        name,
     )

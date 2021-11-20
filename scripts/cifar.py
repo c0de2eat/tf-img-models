@@ -24,10 +24,10 @@ from tfim.modeling.layers import dense
 
 os.environ["TF_CUDNN_DETERMINISTIC"] = "1"
 os.environ["TF_DETERMINISTIC_OPS"] = "1"
-random.seed(2554766)
-np.random.seed(2554766)
-tf.random.set_seed(2554766)
-rng = tf.random.Generator.from_seed(2554766)
+random.seed(1234)
+np.random.seed(1234)
+tf.random.set_seed(1234)
+rng = tf.random.Generator.from_seed(1234)
 
 
 def main(args):
@@ -51,7 +51,11 @@ def main(args):
 
     def process_train(img, label):
         img = tf.image.pad_to_bounding_box(
-            img, img_pad_offset_h, img_pad_offset_w, img_pad_target_h, img_pad_target_w,
+            img,
+            img_pad_offset_h,
+            img_pad_offset_w,
+            img_pad_target_h,
+            img_pad_target_w,
         )
         img = tf.image.stateless_random_crop(
             img,
@@ -72,7 +76,10 @@ def main(args):
         return img, label
 
     train_dataset, val_dataset = tfds.load(
-        "cifar10", split=["train", "test"], data_dir=args.data_dir, as_supervised=True
+        "cifar10",
+        split=["train", "test"],
+        data_dir=args.data_dir,
+        as_supervised=True,
     )
 
     train_dataset = train_dataset.map(process_train)
@@ -124,10 +131,14 @@ def main(args):
         features = GlobalAvgPool2D()(feature_map)
         if args.dropout > 0:
             features = tf.keras.layers.Dropout(args.dropout)(features)
-        outputs = dense(10, weight_decay=args.weight_decay, name="classifier")(features)
+        outputs = dense(10, weight_decay=args.weight_decay, name="classifier")(
+            features
+        )
         model = Model(inputs=inputs, outputs=outputs)
         model.compile(
-            optimizer=optimizer, loss=loss_fn, metrics=["accuracy"],
+            optimizer=optimizer,
+            loss=loss_fn,
+            metrics=["accuracy"],
         )
     plot_model(
         backbone,
@@ -136,15 +147,26 @@ def main(args):
         show_layer_names=True,
     )
     plot_model(
-        model, os.path.join(args.out_dir, "model.png"), True, show_layer_names=True
+        model,
+        os.path.join(args.out_dir, "model.png"),
+        True,
+        show_layer_names=True,
     )
 
     callbacks = [
-        TensorBoard(log_dir=os.path.join(tb_dir), histogram_freq=5, write_images=True,),
-        CSVLogger(
-            os.path.join(args.out_dir, "training.log"), separator=",", append=False
+        TensorBoard(
+            log_dir=os.path.join(tb_dir),
+            histogram_freq=5,
+            write_images=True,
         ),
-        ModelCheckpoint(state_dir, monitor="val_accuracy", save_best_only=True),
+        CSVLogger(
+            os.path.join(args.out_dir, "training.log"),
+            separator=",",
+            append=False,
+        ),
+        ModelCheckpoint(
+            state_dir, monitor="val_accuracy", save_best_only=True
+        ),
         ModelCheckpoint(
             weights_name,
             monitor="val_accuracy",
@@ -188,8 +210,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "-b", "--batch-size", default=64, type=int, help="Batch size per GPU."
     )
-    parser.add_argument("--img-height", default=224, type=int, help="Image height.")
-    parser.add_argument("--img-width", default=224, type=int, help="Image width.")
+    parser.add_argument(
+        "--img-height", default=224, type=int, help="Image height."
+    )
+    parser.add_argument(
+        "--img-width", default=224, type=int, help="Image width."
+    )
     # ==================================================================================
 
     # ==================================================================================
@@ -198,13 +224,18 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data-dir", type=str, required=True, help="TFDS root directory."
     )
-    parser.add_argument("--out-dir", type=str, required=True, help="Output directory.")
+    parser.add_argument(
+        "--out-dir", type=str, required=True, help="Output directory."
+    )
 
     # ==================================================================================
     # Loss
     # ==================================================================================
     parser.add_argument(
-        "--label-smoothing", default=0.1, type=float, help="Label smoothing rate."
+        "--label-smoothing",
+        default=0.1,
+        type=float,
+        help="Label smoothing rate.",
     )
     # ----------------------------------------------------------------------------------
 
@@ -228,7 +259,9 @@ if __name__ == "__main__":
         action="store_true",
         help="Use convolutional bottleneck attention module (CBAM).",
     )
-    parser.add_argument("--dropout", default=0.0, type=float, help="Dropout rate.")
+    parser.add_argument(
+        "--dropout", default=0.0, type=float, help="Dropout rate."
+    )
     parser.add_argument(
         "--instance-batch-norm",
         action="store_true",
@@ -240,7 +273,11 @@ if __name__ == "__main__":
         help="Use squeeze and excitation (SE) module.",
     )
     parser.add_argument(
-        "-wd", "--weight-decay", default=1e-4, type=float, help="Label smoothing rate."
+        "-wd",
+        "--weight-decay",
+        default=1e-4,
+        type=float,
+        help="Label smoothing rate.",
     )
     # ==================================================================================
 
@@ -258,7 +295,11 @@ if __name__ == "__main__":
         help="GPU ID to be used for training based on `nvidia-smi`",
     )
     parser.add_argument(
-        "-lr", "--learning-rate", default=1e-3, type=float, help="Learning rate."
+        "-lr",
+        "--learning-rate",
+        default=1e-3,
+        type=float,
+        help="Learning rate.",
     )
     # ==================================================================================
 

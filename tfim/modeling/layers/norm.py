@@ -17,7 +17,7 @@ def batch_norm(
     norm_weight_zero_init: bool = False,
     moving_mean_initializer: Union[Initializer, str] = "zeros",
     moving_variance_initializer: Union[Initializer, str] = "ones",
-    weight_decay: float = None,
+    weight_decay: float = 0.0,
     name: str = None,
 ) -> BatchNormalization:
     gamma_initializer = "zeros" if norm_weight_zero_init else "ones"
