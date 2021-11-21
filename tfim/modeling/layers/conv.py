@@ -2,15 +2,18 @@ from typing import Tuple, Union
 
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Conv2D, ReLU
-from tensorflow.keras.regularizers import L2
 
-from tfim.modeling.layers.norm import batch_norm
+from tfim.modeling.layers.norm import (
+    BatchNorm,
+    GroupBatchNorm,
+    InstanceBatchNorm,
+)
 
 
-__all__ = ["conv2d", "conv2d_bn", "conv2d_bn_relu", "conv2d_relu"]
+__all__ = ["Conv2d", "Conv2dNorm", "Conv2dNormReLU", "Conv2dReLU"]
 
 
-def conv2d(
+def Conv2d(
     filters: int,
     kernel_size: Union[int, Tuple[int, int]],
     strides: Union[int, Tuple[int, int]] = (1, 1),
@@ -19,7 +22,6 @@ def conv2d(
     groups=1,
     use_bias=True,
     kernel_initializer="glorot_uniform",
-    weight_decay: float = 0.0,
     name: str = None,
 ) -> Conv2D:
     return Conv2D(
@@ -31,12 +33,11 @@ def conv2d(
         groups=groups,
         use_bias=use_bias,
         kernel_initializer=kernel_initializer,
-        kernel_regularizer=L2(weight_decay),
         name=name,
     )
 
 
-def conv2d_bn(
+def Conv2dNorm(
     filters: int,
     kernel_size: Union[int, Tuple[int, int]],
     strides: Union[int, Tuple[int, int]] = (1, 1),
@@ -45,13 +46,22 @@ def conv2d_bn(
     groups=1,
     use_bias=True,
     kernel_initializer="glorot_uniform",
+    normalization: str = "bn",
     norm_weight_zero_init: bool = False,
-    weight_decay: float = 0.0,
     name: str = None,
 ) -> Sequential:
+    if normalization == "bn":
+        norm = BatchNorm
+    elif normalization == "gbn":
+        norm = GroupBatchNorm
+    elif normalization == "ibn":
+        norm = InstanceBatchNorm
+    else:
+        raise NotImplementedError
+
     return Sequential(
         [
-            conv2d(
+            Conv2d(
                 filters,
                 kernel_size,
                 strides,
@@ -60,18 +70,14 @@ def conv2d_bn(
                 groups,
                 use_bias,
                 kernel_initializer,
-                weight_decay,
             ),
-            batch_norm(
-                norm_weight_zero_init=norm_weight_zero_init,
-                weight_decay=weight_decay,
-            ),
+            norm(norm_weight_zero_init=norm_weight_zero_init),
         ],
         name,
     )
 
 
-def conv2d_bn_relu(
+def Conv2dNormReLU(
     filters: int,
     kernel_size: Union[int, Tuple[int, int]],
     strides: Union[int, Tuple[int, int]] = (1, 1),
@@ -80,34 +86,28 @@ def conv2d_bn_relu(
     groups=1,
     use_bias=True,
     kernel_initializer="glorot_uniform",
+    normalization: str = "bn",
     norm_weight_zero_init: bool = False,
-    weight_decay: float = 0.0,
     name: str = None,
 ) -> Sequential:
-    return Sequential(
-        [
-            conv2d(
-                filters,
-                kernel_size,
-                strides,
-                padding,
-                dilation_rate,
-                groups,
-                use_bias,
-                kernel_initializer,
-                weight_decay,
-            ),
-            batch_norm(
-                norm_weight_zero_init=norm_weight_zero_init,
-                weight_decay=weight_decay,
-            ),
-            ReLU(),
-        ],
+    conv = Conv2dNorm(
+        filters,
+        kernel_size,
+        strides,
+        padding,
+        dilation_rate,
+        groups,
+        use_bias,
+        kernel_initializer,
+        normalization,
+        norm_weight_zero_init,
         name,
     )
+    conv.add(ReLU())
+    return conv
 
 
-def conv2d_relu(
+def Conv2dReLU(
     filters: int,
     kernel_size: Union[int, Tuple[int, int]],
     strides: Union[int, Tuple[int, int]] = (1, 1),
@@ -116,12 +116,11 @@ def conv2d_relu(
     groups=1,
     use_bias=True,
     kernel_initializer="glorot_uniform",
-    weight_decay: float = 0.0,
     name: str = None,
 ) -> Sequential:
     return Sequential(
         [
-            conv2d(
+            Conv2d(
                 filters,
                 kernel_size,
                 strides,
@@ -130,7 +129,6 @@ def conv2d_relu(
                 groups,
                 use_bias,
                 kernel_initializer,
-                weight_decay,
             ),
             ReLU(),
         ],

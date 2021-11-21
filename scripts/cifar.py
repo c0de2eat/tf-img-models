@@ -3,6 +3,7 @@ import random
 
 import numpy as np
 from sklearn.metrics import classification_report
+from tensorflow_addons.optimizers import AdamW
 import tensorflow as tf
 from tensorflow.keras import Input, Model
 from tensorflow.keras.callbacks import (
@@ -13,13 +14,12 @@ from tensorflow.keras.callbacks import (
 from tensorflow.keras.layers import GlobalAvgPool2D
 from tensorflow.keras.losses import CategoricalCrossentropy
 from tensorflow.keras.mixed_precision import global_policy
-from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import plot_model
 import tensorflow_datasets as tfds
 from tfim import setup_tf, CosineDecayWithWarmup
 from tfim.data import batchify
 from tfim.modeling import backbones
-from tfim.modeling.layers import dense
+from tfim.modeling.layers import Dense
 
 
 os.environ["TF_CUDNN_DETERMINISTIC"] = "1"
@@ -84,7 +84,12 @@ def main(args):
 
     train_dataset = train_dataset.map(process_train)
     val_dataset = val_dataset.map(process_val, tf.data.AUTOTUNE)
-    train_loader = batchify(train_dataset, args.batch_size, shuffle=True)
+    train_loader = batchify(
+        train_dataset,
+        args.batch_size,
+        shuffle=True,
+        buffer_size=len(train_dataset),
+    )
     val_loader = batchify(val_dataset, args.batch_size, shuffle=False)
 
     s = (
@@ -105,40 +110,37 @@ def main(args):
         ),
     )
 
-    optimizer = Adam(
+    # optimizer = Adam(
+    #     CosineDecayWithWarmup(
+    #         args.learning_rate,
+    #         warmup_epochs=args.epochs // 10,
+    #         total_epochs=args.epochs,
+    #         steps_per_epoch=len(train_loader),
+    #     )
+    # )
+    optimizer = AdamW(
+        args.weight_decay,
         CosineDecayWithWarmup(
             args.learning_rate,
             warmup_epochs=args.epochs // 10,
             total_epochs=args.epochs,
             steps_per_epoch=len(train_loader),
-        )
+        ),
     )
 
     with strategy.scope():
         inputs = Input((args.img_height, args.img_width, 3))
         backbone = getattr(backbones, args.backbone)(
-            inputs,
-            small_input=True,
-            # Normalizations
-            ibn=args.instance_batch_norm,
-            # Attention blocks
-            se=args.squeeze_excitation,
-            bam=args.bottleneck_attention,
-            cbam=args.convolutional_bottleneck_attention,
-            weight_decay=args.weight_decay,
+            inputs, normalization=args.normalization, small_input=True
         )
         feature_map = backbone(inputs)
         features = GlobalAvgPool2D()(feature_map)
         if args.dropout > 0:
             features = tf.keras.layers.Dropout(args.dropout)(features)
-        outputs = dense(10, weight_decay=args.weight_decay, name="classifier")(
-            features
-        )
+        outputs = Dense(10, name="classifier")(features)
         model = Model(inputs=inputs, outputs=outputs)
         model.compile(
-            optimizer=optimizer,
-            loss=loss_fn,
-            metrics=["accuracy"],
+            optimizer=optimizer, loss=loss_fn, metrics=["accuracy"],
         )
     plot_model(
         backbone,
@@ -155,9 +157,7 @@ def main(args):
 
     callbacks = [
         TensorBoard(
-            log_dir=os.path.join(tb_dir),
-            histogram_freq=5,
-            write_images=True,
+            log_dir=os.path.join(tb_dir), histogram_freq=5, write_images=True,
         ),
         CSVLogger(
             os.path.join(args.out_dir, "training.log"),
@@ -204,9 +204,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    # ==================================================================================
+    # ==========================================================================
     # Data
-    # ==================================================================================
+    # ==========================================================================
     parser.add_argument(
         "-b", "--batch-size", default=64, type=int, help="Batch size per GPU."
     )
@@ -216,11 +216,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--img-width", default=224, type=int, help="Image width."
     )
-    # ==================================================================================
+    # ==========================================================================
 
-    # ==================================================================================
+    # ==========================================================================
     # Directories
-    # ==================================================================================
+    # ==========================================================================
     parser.add_argument(
         "--data-dir", type=str, required=True, help="TFDS root directory."
     )
@@ -228,49 +228,36 @@ if __name__ == "__main__":
         "--out-dir", type=str, required=True, help="Output directory."
     )
 
-    # ==================================================================================
+    # ==========================================================================
     # Loss
-    # ==================================================================================
+    # ==========================================================================
     parser.add_argument(
         "--label-smoothing",
         default=0.1,
         type=float,
         help="Label smoothing rate.",
     )
-    # ----------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
-    # ==================================================================================
+    # ==========================================================================
     # Model
-    # ==================================================================================
+    # ==========================================================================
     parser.add_argument(
         "--backbone",
-        default="resnet50",
+        default="resnet18",
         type=str,
         choices=["resnet18", "resnet34", "resnet50", "resnet101", "resnet152"],
         help="Backbone to be used.",
     )
     parser.add_argument(
-        "--bottleneck-attention",
-        action="store_true",
-        help="Use bottleneck attention module (BAM).",
-    )
-    parser.add_argument(
-        "--convolutional-bottleneck-attention",
-        action="store_true",
-        help="Use convolutional bottleneck attention module (CBAM).",
-    )
-    parser.add_argument(
         "--dropout", default=0.0, type=float, help="Dropout rate."
     )
     parser.add_argument(
-        "--instance-batch-norm",
-        action="store_true",
-        help="Use instance batch norm. (IBN).",
-    )
-    parser.add_argument(
-        "--squeeze-excitation",
-        action="store_true",
-        help="Use squeeze and excitation (SE) module.",
+        "--normalization",
+        default="bn",
+        type=str,
+        choices=["bn", "gbn", "ibn"],
+        help="Normalization to be used.",
     )
     parser.add_argument(
         "-wd",
@@ -279,11 +266,11 @@ if __name__ == "__main__":
         type=float,
         help="Label smoothing rate.",
     )
-    # ==================================================================================
+    # ==========================================================================
 
-    # ==================================================================================
+    # ==========================================================================
     # Training
-    # ==================================================================================
+    # ==========================================================================
     parser.add_argument(
         "-e", "--epochs", default=50, type=int, help="Total training epochs."
     )
@@ -301,7 +288,7 @@ if __name__ == "__main__":
         type=float,
         help="Learning rate.",
     )
-    # ==================================================================================
+    # ==========================================================================
 
     args = parser.parse_args()
     main(args)

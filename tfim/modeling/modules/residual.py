@@ -3,7 +3,7 @@ from typing import Tuple, Union
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import add, ReLU
 
-from tfim.modeling.layers import conv2d_bn, conv2d_bn_relu
+from tfim.modeling.layers import Conv2dNorm, Conv2dNormReLU
 
 
 __all__ = ["residual_block"]
@@ -15,15 +15,15 @@ def residual_block(
     use_bottleneck: bool = True,
     *,
     strides: Union[int, Tuple[int, int]] = (1, 1),
+    normalization: str = "bn",
     downsample: Union[Sequential, None] = None,
-    weight_decay: float = 0.0,
     name: str = None,
 ):
     identity = x
     if use_bottleneck:
-        x = bottleneck(filters, strides, weight_decay, name)(x)
+        x = Bottleneck(filters, strides, normalization, name)(x)
     else:
-        x = residual(filters, strides, weight_decay, name)(x)
+        x = Residual(filters, strides, normalization, name)(x)
     if downsample is not None:
         identity = downsample(identity)
     x = add([x, identity])
@@ -31,45 +31,37 @@ def residual_block(
     return x
 
 
-def bottleneck(
+def Bottleneck(
     filters: int,
     strides: Union[int, Tuple[int, int]],
-    weight_decay: float = 0.0,
+    normalization: str = "bn",
     name: str = None,
 ):
     return Sequential(
         [
-            conv2d_bn_relu(filters, 1, weight_decay=weight_decay),
-            conv2d_bn_relu(
-                filters, 3, strides=strides, weight_decay=weight_decay
-            ),
-            conv2d_bn(
-                filters * 4,
-                1,
-                norm_weight_zero_init=True,
-                weight_decay=weight_decay,
+            Conv2dNormReLU(filters, 1, normalization=normalization),
+            Conv2dNormReLU(filters, 3, strides=strides, normalization="bn"),
+            Conv2dNorm(
+                filters * 4, 1, normalization="bn", norm_weight_zero_init=True
             ),
         ],
         name=f"{name}_bottleneck",
     )
 
 
-def residual(
+def Residual(
     filters: int,
     strides: Union[int, Tuple[int, int]],
-    weight_decay: float = 0.0,
+    normalization: str = "bn",
     name: str = None,
 ):
     return Sequential(
         [
-            conv2d_bn_relu(
-                filters, 3, strides=strides, weight_decay=weight_decay
+            Conv2dNormReLU(
+                filters, 3, strides=strides, normalization=normalization
             ),
-            conv2d_bn(
-                filters,
-                3,
-                norm_weight_zero_init=True,
-                weight_decay=weight_decay,
+            Conv2dNorm(
+                filters, 3, normalization="bn", norm_weight_zero_init=True
             ),
         ],
         name=f"{name}_residual",

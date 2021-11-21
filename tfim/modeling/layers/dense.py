@@ -1,19 +1,10 @@
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.regularizers import L2
+from tensorflow.keras.layers import Dense as D
 
 
-__all__ = ["dense"]
+__all__ = ["Dense"]
 
 
-def dense(
-    units: int,
-    kernel_initializer: str = "glorot_uniform",
-    weight_decay: float = None,
-    name: str = None,
-) -> Dense:
-    return Dense(
-        units,
-        kernel_initializer=kernel_initializer,
-        kernel_regularizer=L2(weight_decay),
-        name=name,
-    )
+def Dense(
+    units: int, kernel_initializer: str = "glorot_uniform", name: str = None,
+) -> D:
+    return D(units, kernel_initializer=kernel_initializer, name=name)

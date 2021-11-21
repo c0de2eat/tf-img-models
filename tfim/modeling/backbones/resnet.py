@@ -1,10 +1,10 @@
 from typing import Tuple, Union
 
 from tensorflow.keras import Input, Model, Sequential
-from tensorflow.keras.layers import AvgPool2D, MaxPool2D, InputSpec
+from tensorflow.keras.layers import AvgPool2D, InputSpec
 from tensorflow.keras.utils import plot_model
 
-from tfim.modeling.layers import conv2d_bn, conv2d_bn_relu
+from tfim.modeling.layers import Conv2dNorm, Conv2dNormReLU
 from tfim.modeling.modules import residual_block
 
 
@@ -26,61 +26,37 @@ class ResNet(Model):
         inputs,
         cfg: Tuple[int, int, int, int],
         use_bottleneck: bool = True,
-        weight_decay: float = 0.0,
+        normalization: str = "bn",
+        small_input: bool = False,
     ):
         self.input_spec = InputSpec(shape=(None,) + inputs.shape)
 
-        # Stem: 112x112
-        # x = conv2d_bn_relu(64, 7, 2, weight_decay=weight_decay)(inputs)
+        # Stem: 56x56
         stem = Sequential(name="stem")
-        stem.add(conv2d_bn_relu(32, 3, 2, weight_decay=weight_decay))
-        stem.add(conv2d_bn_relu(32, 3, weight_decay=weight_decay))
-        stem.add(conv2d_bn_relu(64, 3, weight_decay=weight_decay))
+        stride = 1 if small_input else 2
+        stem.add(Conv2dNormReLU(64, 3, stride, normalization="bn"))
+        stem.add(Conv2dNormReLU(64, 3, normalization="bn"))
+        stem.add(Conv2dNormReLU(64, 3, normalization="bn"))
         x = stem(inputs)
-        x = MaxPool2D(3, 2, padding="same")(x)
 
         # Layer1: 56x56
         x = self.__construct_residual_block(
-            x,
-            cfg[0],
-            64,
-            1,
-            use_bottleneck,
-            weight_decay,
-            "layer1",
+            x, cfg[0], 64, 1, use_bottleneck, normalization, "layer1",
         )
 
         # Layer2: 28x28
         x = self.__construct_residual_block(
-            x,
-            cfg[1],
-            128,
-            2,
-            use_bottleneck,
-            weight_decay,
-            "layer2",
+            x, cfg[1], 128, 2, use_bottleneck, normalization, "layer2",
         )
 
         # Layer3: 14x14
         x = self.__construct_residual_block(
-            x,
-            cfg[2],
-            256,
-            2,
-            use_bottleneck,
-            weight_decay,
-            "layer3",
+            x, cfg[2], 256, 2, use_bottleneck, normalization, "layer3",
         )
 
         # Layer4: 7x7
         x = self.__construct_residual_block(
-            x,
-            cfg[0],
-            512,
-            2,
-            use_bottleneck,
-            weight_decay,
-            "layer4",
+            x, cfg[0], 512, 2, use_bottleneck, normalization, "layer4",
         )
 
         total_layers = 2
@@ -99,7 +75,7 @@ class ResNet(Model):
         filters: int,
         strides: Union[int, Tuple[int, int]],
         use_bottleneck: bool,
-        weight_decay: float,
+        normalization: str = "bn",
         name: str = None,
     ):
         expansion = 4 if use_bottleneck else 1
@@ -108,9 +84,7 @@ class ResNet(Model):
             downsample = Sequential(
                 [
                     AvgPool2D(2, strides, padding="same"),
-                    conv2d_bn(
-                        filters * expansion, 1, weight_decay=weight_decay
-                    ),
+                    Conv2dNorm(filters * expansion, 1, normalization="bn"),
                 ],
                 name=f"{name}_downsample",
             )
@@ -122,8 +96,8 @@ class ResNet(Model):
             filters,
             use_bottleneck,
             strides=strides,
+            normalization=normalization,
             downsample=downsample,
-            weight_decay=weight_decay,
             name=f"{name}_block_1",
         )
 
@@ -135,8 +109,8 @@ class ResNet(Model):
                 filters,
                 use_bottleneck,
                 strides=1,
+                normalization=normalization,
                 downsample=None,
-                weight_decay=weight_decay,
                 name=f"{name}_block_{idx + 1}",
             )
 
@@ -144,71 +118,63 @@ class ResNet(Model):
 
 
 def resnet18(
-    inputs,
-    *,
-    weight_decay: float = 0.0,
+    inputs, *, normalization: str = "bn", small_input: bool = False
 ) -> Model:
     model = ResNet(
         inputs,
         cfg=(2, 2, 2, 2),
         use_bottleneck=False,
-        weight_decay=weight_decay,
+        normalization=normalization,
+        small_input=small_input,
     )
     return model
 
 
 def resnet34(
-    inputs,
-    *,
-    weight_decay: float = 0.0,
+    inputs, *, normalization: str = "bn", small_input: bool = False
 ) -> Model:
     model = ResNet(
         inputs,
         cfg=(3, 4, 6, 3),
         use_bottleneck=False,
-        weight_decay=weight_decay,
+        normalization=normalization,
+        small_input=small_input,
     )
     return model
 
 
 def resnet50(
-    inputs,
-    *,
-    weight_decay: float = 0.0,
+    inputs, *, normalization: str = "bn", small_input: bool = False
 ) -> Model:
     model = ResNet(
-        inputs,
-        cfg=(3, 4, 6, 3),
-        use_bottleneck=True,
-        weight_decay=weight_decay,
+        inputs, cfg=(3, 4, 6, 3), use_bottleneck=True, small_input=small_input,
     )
     return model
+    normalization = (normalization,)
 
 
 def resnet101(
-    inputs,
-    *,
-    weight_decay: float = 0.0,
+    inputs, *, normalization: str = "bn", small_input: bool = False
 ) -> Model:
     model = ResNet(
         inputs,
         cfg=(3, 4, 23, 3),
         use_bottleneck=True,
-        weight_decay=weight_decay,
+        normalization=normalization,
+        small_input=small_input,
     )
     return model
 
 
 def resnet152(
-    inputs,
-    *,
-    weight_decay: float = 0.0,
+    inputs, *, normalization: str = "bn", small_input: bool = False
 ) -> Model:
     model = ResNet(
         inputs,
         cfg=(3, 8, 36, 3),
         use_bottleneck=True,
-        weight_decay=weight_decay,
+        normalization=normalization,
+        small_input=small_input,
     )
     return model
 
