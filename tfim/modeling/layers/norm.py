@@ -54,9 +54,9 @@ def GroupNorm(
 
 
 class GroupBatchNorm(Layer):
-    """Instance Batch Normalization (IBN).
-    References:
-    - https://arxiv.org/abs/1807.09441
+    """Group Batch Normalization (GBN).
+
+    Implementation is based on the idea of IBN.
     """
 
     def __init__(
@@ -115,6 +115,7 @@ def InstanceNorm(
 
 class InstanceBatchNorm(Layer):
     """Instance Batch Normalization (IBN).
+
     References:
     - https://arxiv.org/abs/1807.09441
     """
