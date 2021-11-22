@@ -33,7 +33,9 @@ class CosineDecayWithWarmup(LearningRateSchedule):
     def __call__(self, global_step) -> tf.Tensor:
         global_step = tf.cast(global_step, dtype=tf.float32)
 
-        warmup_val = tf.multiply(tf.divide(global_step, self._warmup_steps), self._val)
+        warmup_val = tf.multiply(
+            tf.divide(global_step, self._warmup_steps), self._val
+        )
         cosine_val = tf.multiply(
             tf.divide(self._val, 2),
             tf.add(
@@ -50,7 +52,9 @@ class CosineDecayWithWarmup(LearningRateSchedule):
             ),
         )
         val = tf.where(
-            tf.less_equal(global_step, self._warmup_steps), warmup_val, cosine_val
+            tf.less_equal(global_step, self._warmup_steps),
+            warmup_val,
+            cosine_val,
         )
         return val
 

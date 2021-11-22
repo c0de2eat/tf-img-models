@@ -3,7 +3,7 @@ from typing import Tuple, Union
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Conv2D, ReLU
 
-from tfim.modeling.layers.norm import (
+from tfim.modeling.layers import (
     BatchNorm,
     GroupBatchNorm,
     InstanceBatchNorm,

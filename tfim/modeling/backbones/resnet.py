@@ -1,8 +1,7 @@
 from typing import Tuple, Union
 
-from tensorflow.keras import Input, Model, Sequential
+from tensorflow.keras import Model, Sequential
 from tensorflow.keras.layers import AvgPool2D, InputSpec
-from tensorflow.keras.utils import plot_model
 
 from tfim.modeling.layers import Conv2dNorm, Conv2dNormReLU
 from tfim.modeling.modules import residual_block
@@ -41,7 +40,6 @@ class ResNet(Model):
         stem.add(Conv2dNormReLU(64, 3, normalization="bn"))
         stem.add(Conv2dNormReLU(64, 3, normalization="bn"))
         x = stem(inputs)
-        print("stem", x.shape)
 
         # Layer1: 56x56
         x = self.__construct_residual_block(
@@ -55,7 +53,6 @@ class ResNet(Model):
             normalization,
             "layer1",
         )
-        print("layer1", x.shape)
 
         # Layer2: 28x28
         x = self.__construct_residual_block(
@@ -69,7 +66,6 @@ class ResNet(Model):
             normalization,
             "layer2",
         )
-        print("layer2", x.shape)
 
         # Layer3: 14x14
         x = self.__construct_residual_block(
@@ -97,7 +93,6 @@ class ResNet(Model):
             normalization,
             "layer4",
         )
-        print("layer4", x.shape)
 
         total_layers = 2
         n = 3 if use_bottleneck else 2
@@ -241,29 +236,3 @@ def resnet152(
         small_input=small_input,
     )
     return model
-
-
-if __name__ == "__main__":
-    inputs = Input((224, 224, 3))
-
-    model = resnet18(inputs)
-    print("Output:", model(inputs).shape)
-    plot_model(model, "resnet18.png", True, show_layer_names=True)
-    model = resnet34(inputs)
-    print("Output:", model(inputs).shape)
-    plot_model(model, "resnet34.png", True, show_layer_names=True)
-    model = resnet50(inputs)
-    print("Output:", model(inputs).shape)
-    plot_model(model, "resnet50.png", True, show_layer_names=True)
-    model = resnext50_32x4d(inputs)
-    print("Output:", model(inputs).shape)
-    plot_model(model, "resnext50_32x4d.png", True, show_layer_names=True)
-    model = resnet101(inputs)
-    print("Output:", model(inputs).shape)
-    plot_model(model, "resnet101.png", True, show_layer_names=True)
-    model = resnext101_32x8d(inputs)
-    print("Output:", model(inputs).shape)
-    plot_model(model, "resnext101_32x8d.png", True, show_layer_names=True)
-    model = resnet152(inputs)
-    print("Output:", model(inputs).shape)
-    plot_model(model, "resnet152.png", True, show_layer_names=True)
