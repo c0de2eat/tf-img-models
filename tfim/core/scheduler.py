@@ -8,6 +8,15 @@ __all__ = ["CosineDecayWithWarmup"]
 
 
 class CosineDecayWithWarmup(LearningRateSchedule):
+    """Scheduler with linear warmup + consine decay.
+
+    Args:
+        val: Initial value
+        warmup_epochs: Number of epochs for warming up
+        total_epochs: Total number of training epochs
+        steps_per_epoch: Number of iteration of batches per epoch
+    """
+
     def __init__(
         self,
         val: float,
@@ -16,14 +25,6 @@ class CosineDecayWithWarmup(LearningRateSchedule):
         total_epochs: int,
         steps_per_epoch: int,
     ):
-        """Scheduler with linear warmup + consine decay.
-
-        Args:
-            val: Initial value
-            warmup_epochs: Number of epochs for warming up
-            total_epochs: Total number of training epochs
-            steps_per_epoch: Number of iteration of batches per epoch
-        """
         super().__init__()
         self._val = val
         self._warmup_steps = steps_per_epoch * warmup_epochs
