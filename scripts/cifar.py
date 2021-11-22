@@ -110,14 +110,6 @@ def main(args):
         ),
     )
 
-    # optimizer = Adam(
-    #     CosineDecayWithWarmup(
-    #         args.learning_rate,
-    #         warmup_epochs=args.epochs // 10,
-    #         total_epochs=args.epochs,
-    #         steps_per_epoch=len(train_loader),
-    #     )
-    # )
     optimizer = AdamW(
         args.weight_decay,
         CosineDecayWithWarmup(
@@ -246,7 +238,14 @@ if __name__ == "__main__":
         "--backbone",
         default="resnet18",
         type=str,
-        choices=["resnet18", "resnet34", "resnet50", "resnet101", "resnet152"],
+        choices=[
+            "resnet18",
+            "resnet34",
+            "resnet50",
+            "resnext50_32x4d",
+            "resnet101",
+            "resnet152",
+        ],
         help="Backbone to be used.",
     )
     parser.add_argument(
