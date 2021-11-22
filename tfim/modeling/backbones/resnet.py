@@ -12,6 +12,7 @@ __all__ = [
     "resnet18",
     "resnet34",
     "resnet50",
+    "resnext50_32x4d",
     "resnet101",
     "resnet152",
     "ResNet",
@@ -25,6 +26,8 @@ class ResNet(Model):
         self,
         inputs,
         cfg: Tuple[int, int, int, int],
+        width: int = 64,
+        groups: int = 1,
         use_bottleneck: bool = True,
         normalization: str = "bn",
         small_input: bool = False,
@@ -38,26 +41,63 @@ class ResNet(Model):
         stem.add(Conv2dNormReLU(64, 3, normalization="bn"))
         stem.add(Conv2dNormReLU(64, 3, normalization="bn"))
         x = stem(inputs)
+        print("stem", x.shape)
 
         # Layer1: 56x56
         x = self.__construct_residual_block(
-            x, cfg[0], 64, 1, use_bottleneck, normalization, "layer1",
+            x,
+            cfg[0],
+            64,
+            width,
+            2,
+            groups,
+            use_bottleneck,
+            normalization,
+            "layer1",
         )
+        print("layer1", x.shape)
 
         # Layer2: 28x28
         x = self.__construct_residual_block(
-            x, cfg[1], 128, 2, use_bottleneck, normalization, "layer2",
+            x,
+            cfg[1],
+            128,
+            width,
+            2,
+            groups,
+            use_bottleneck,
+            normalization,
+            "layer2",
         )
+        print("layer2", x.shape)
 
         # Layer3: 14x14
         x = self.__construct_residual_block(
-            x, cfg[2], 256, 2, use_bottleneck, normalization, "layer3",
+            x,
+            cfg[2],
+            256,
+            width,
+            2,
+            groups,
+            use_bottleneck,
+            normalization,
+            "layer3",
         )
+        print("layer3", x.shape)
 
         # Layer4: 7x7
         x = self.__construct_residual_block(
-            x, cfg[0], 512, 2, use_bottleneck, normalization, "layer4",
+            x,
+            cfg[0],
+            512,
+            width,
+            2,
+            groups,
+            use_bottleneck,
+            normalization,
+            "layer4",
         )
+        print("layer4", x.shape)
 
         total_layers = 2
         n = 3 if use_bottleneck else 2
@@ -73,7 +113,9 @@ class ResNet(Model):
         x,
         n_layers: int,
         filters: int,
+        width: int,
         strides: Union[int, Tuple[int, int]],
+        groups: int,
         use_bottleneck: bool,
         normalization: str = "bn",
         name: str = None,
@@ -95,7 +137,9 @@ class ResNet(Model):
             x,
             filters,
             use_bottleneck,
+            width=width,
             strides=strides,
+            groups=groups,
             normalization=normalization,
             downsample=downsample,
             name=f"{name}_block_1",
@@ -108,7 +152,9 @@ class ResNet(Model):
                 x,
                 filters,
                 use_bottleneck,
+                width=width,
                 strides=1,
+                groups=groups,
                 normalization=normalization,
                 downsample=None,
                 name=f"{name}_block_{idx + 1}",
@@ -147,10 +193,28 @@ def resnet50(
     inputs, *, normalization: str = "bn", small_input: bool = False
 ) -> Model:
     model = ResNet(
-        inputs, cfg=(3, 4, 6, 3), use_bottleneck=True, small_input=small_input,
+        inputs,
+        cfg=(3, 4, 6, 3),
+        use_bottleneck=True,
+        normalization=normalization,
+        small_input=small_input,
     )
     return model
-    normalization = (normalization,)
+
+
+def resnext50_32x4d(
+    inputs, *, normalization: str = "bn", small_input: bool = False
+) -> Model:
+    model = ResNet(
+        inputs,
+        cfg=(3, 4, 6, 3),
+        width=4,
+        groups=32,
+        use_bottleneck=True,
+        normalization=normalization,
+        small_input=small_input,
+    )
+    return model
 
 
 def resnet101(
@@ -191,9 +255,15 @@ if __name__ == "__main__":
     model = resnet50(inputs)
     print("Output:", model(inputs).shape)
     plot_model(model, "resnet50.png", True, show_layer_names=True)
+    model = resnext50_32x4d(inputs)
+    print("Output:", model(inputs).shape)
+    plot_model(model, "resnext50_32x4d.png", True, show_layer_names=True)
     model = resnet101(inputs)
     print("Output:", model(inputs).shape)
     plot_model(model, "resnet101.png", True, show_layer_names=True)
+    model = resnext101_32x8d(inputs)
+    print("Output:", model(inputs).shape)
+    plot_model(model, "resnext101_32x8d.png", True, show_layer_names=True)
     model = resnet152(inputs)
     print("Output:", model(inputs).shape)
     plot_model(model, "resnet152.png", True, show_layer_names=True)
