@@ -8,7 +8,7 @@ def batchify(
     dataset: tf.data.Dataset,
     batch_size: int,
     *,
-    shuffle: bool,
+    shuffle: bool = False,
     buffer_size: int = None
 ) -> tf.data.Dataset:
     if shuffle:

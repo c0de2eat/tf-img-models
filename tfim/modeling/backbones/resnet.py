@@ -1,7 +1,7 @@
 from typing import Tuple, Union
 
 from tensorflow.keras import Model, Sequential
-from tensorflow.keras.layers import AvgPool2D, InputSpec
+from tensorflow.keras.layers import AvgPool2D, InputSpec, MaxPool2D
 
 from tfim.modeling.layers import Conv2dNorm, Conv2dNormReLU
 from tfim.modeling.modules import residual_block
@@ -36,9 +36,11 @@ class ResNet(Model):
         # Stem: 56x56
         stem = Sequential(name="stem")
         stride = 1 if small_input else 2
-        stem.add(Conv2dNormReLU(64, 3, stride, normalization="bn"))
+        stem.add(Conv2dNormReLU(32, 3, stride, normalization="bn"))
+        stem.add(Conv2dNormReLU(32, 3, normalization="bn"))
         stem.add(Conv2dNormReLU(64, 3, normalization="bn"))
-        stem.add(Conv2dNormReLU(64, 3, normalization="bn"))
+        if not small_input:
+            stem.add(MaxPool2D(3, 2, padding="same"))
         x = stem(inputs)
 
         # Layer1: 56x56
@@ -47,7 +49,7 @@ class ResNet(Model):
             cfg[0],
             64,
             width,
-            2,
+            1,
             groups,
             use_bottleneck,
             normalization,
@@ -79,7 +81,6 @@ class ResNet(Model):
             normalization,
             "layer3",
         )
-        print("layer3", x.shape)
 
         # Layer4: 7x7
         x = self.__construct_residual_block(
@@ -98,7 +99,6 @@ class ResNet(Model):
         n = 3 if use_bottleneck else 2
         for c in cfg:
             total_layers += c * n
-        print(f"=> # of layers in ResNet: {total_layers}")
         super().__init__(
             inputs=inputs, outputs=x, name=f"ResNet{total_layers}"
         )
