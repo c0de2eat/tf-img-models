@@ -44,16 +44,15 @@ def main(args):
     os.makedirs(weights_dir, exist_ok=True)
     weights_name = os.path.join(weights_dir, "weights")
 
-    train_dataset, val_dataset, names = datasets.cifar10(args.data_dir)
+    if "cifar100" in args.data_dir:
+        train_dataset, val_dataset, names = datasets.cifar100(args.data_dir)
+    elif "cifar10" in args.data_dir:
+        train_dataset, val_dataset, names = datasets.cifar10(args.data_dir)
 
     img_pad_target_h = int(args.img_height * 1.25)
     img_pad_target_w = int(args.img_width * 1.25)
     img_pad_offset_h = (img_pad_target_h - args.img_height) // 2
     img_pad_offset_w = (img_pad_target_w - args.img_width) // 2
-
-    """
-    Add PCA noise with a coefficient sampled from normal distribution N(0,0.1)
-    """
 
     def process_train(img, label):
         img = tf.image.pad_to_bounding_box(
@@ -71,15 +70,6 @@ def main(args):
         img = tf.image.stateless_random_flip_left_right(
             img, seed=rng.uniform_full_int((2,), dtype=tf.int32)
         )
-        # img = tf.image.stateless_random_brightness(
-        #     img, 0.4, seed=rng.uniform_full_int((2,), dtype=tf.int32)
-        # )
-        # img = tf.image.stateless_random_hue(
-        #     img, 0.4, seed=rng.uniform_full_int((2,), dtype=tf.int32)
-        # )
-        # img = tf.image.stateless_random_saturation(
-        #     img, 0.6, 1.4, seed=rng.uniform_full_int((2,), dtype=tf.int32)
-        # )
         img = tf.image.resize_with_pad(img, args.img_height, args.img_width)
         img = tf.divide(tf.cast(img, tf.float32), 255.0)
         label = tf.one_hot(label, len(names), dtype=tf.float32)
@@ -132,7 +122,7 @@ def main(args):
     with strategy.scope():
         inputs = Input((args.img_height, args.img_width, 3))
         backbone = getattr(backbones, args.backbone)(
-            inputs, normalization=args.normalization, small_input=True
+            inputs, norm=args.normalization, small_input=True,
         )
         feature_map = backbone(inputs)
         features = GlobalAvgPool2D()(feature_map)
@@ -273,7 +263,7 @@ if __name__ == "__main__":
         "--weight-decay",
         default=1e-4,
         type=float,
-        help="Label smoothing rate.",
+        help="Weight decay rate.",
     )
     # ==========================================================================
 
@@ -281,7 +271,7 @@ if __name__ == "__main__":
     # Training
     # ==========================================================================
     parser.add_argument(
-        "-e", "--epochs", default=100, type=int, help="Total training epochs."
+        "-e", "--epochs", default=50, type=int, help="Total training epochs."
     )
     parser.add_argument(
         "--gpus",
@@ -293,7 +283,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-lr",
         "--learning-rate",
-        default=1e-3,
+        default=3e-3,
         type=float,
         help="Learning rate.",
     )

@@ -6,7 +6,7 @@ from tensorflow.keras.initializers import Initializer
 from tensorflow.keras.layers import BatchNormalization, Layer
 
 
-__all__ = ["BatchNorm", "GroupBatchNorm", "InstanceBatchNorm"]
+__all__ = ["get_normalization"]
 
 
 def BatchNorm(
@@ -53,12 +53,25 @@ def GroupNorm(
     )
 
 
+def InstanceNorm(
+    *,
+    epsilon: float = 0.001,
+    center: bool = True,
+    scale: bool = True,
+    norm_weight_zero_init: bool = False,
+    name: str = None,
+) -> InstanceNormalization:
+    gamma_initializer = "zeros" if norm_weight_zero_init else "ones"
+    return InstanceNormalization(
+        epsilon=epsilon,
+        center=center,
+        scale=scale,
+        gamma_initializer=gamma_initializer,
+        name=name,
+    )
+
+
 class GroupBatchNorm(Layer):
-    """Group Batch Normalization (GBN).
-
-    Implementation is based on the idea of IBN.
-    """
-
     def __init__(
         self,
         *,
@@ -83,34 +96,21 @@ class GroupBatchNorm(Layer):
             moving_variance_initializer=moving_variance_initializer,
             name=f"{name}_bn",
         )
-        self.i = GroupNorm(
+        self.g = GroupNorm(
             groups=groups,
             epsilon=epsilon,
             center=center,
             scale=scale,
+            norm_weight_zero_init=norm_weight_zero_init,
             name=f"{name}_in",
         )
 
     def call(self, inputs, training):
-        b, i = tf.split(inputs, 2, -1)
+        b, g = tf.split(inputs, 2, -1)
         b = self.b(b, training)
-        i = self.i(i)
-        x = tf.concat([b, i], -1)
+        g = self.g(g)
+        x = tf.concat([b, g], -1)
         return x
-
-
-def InstanceNorm(
-    *,
-    epsilon: float = 0.001,
-    center: bool = True,
-    scale: bool = True,
-    name: str = None,
-) -> InstanceNormalization:
-    """
-    """
-    return InstanceNormalization(
-        epsilon=epsilon, center=center, scale=scale, name=name
-    )
 
 
 class InstanceBatchNorm(Layer):
@@ -144,7 +144,11 @@ class InstanceBatchNorm(Layer):
             name=f"{name}_bn",
         )
         self.i = InstanceNorm(
-            epsilon=epsilon, center=center, scale=scale, name=f"{name}_in"
+            epsilon=epsilon,
+            center=center,
+            scale=scale,
+            norm_weight_zero_init=norm_weight_zero_init,
+            name=f"{name}_in",
         )
 
     def call(self, inputs, training):
@@ -153,3 +157,14 @@ class InstanceBatchNorm(Layer):
         i = self.i(i)
         x = tf.concat([b, i], -1)
         return x
+
+
+def get_normalization(name: str, norm_weight_zero_init: bool = False):
+    if name == "bn":
+        return BatchNorm(norm_weight_zero_init=norm_weight_zero_init)
+    elif name == "gbn":
+        return GroupBatchNorm(norm_weight_zero_init=norm_weight_zero_init)
+    elif name == "ibn":
+        return InstanceBatchNorm(norm_weight_zero_init=norm_weight_zero_init)
+    else:
+        raise NotImplementedError

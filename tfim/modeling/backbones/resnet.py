@@ -3,7 +3,7 @@ from typing import Tuple, Union
 from tensorflow.keras import Model, Sequential
 from tensorflow.keras.layers import AvgPool2D, InputSpec, MaxPool2D
 
-from tfim.modeling.layers import Conv2dNorm, Conv2dNormReLU
+from tfim.modeling.layers import Conv2dNorm, Conv2dNormActivation
 from tfim.modeling.modules import residual_block
 
 
@@ -28,7 +28,8 @@ class ResNet(Model):
         width: int = 64,
         groups: int = 1,
         use_bottleneck: bool = True,
-        normalization: str = "bn",
+        norm: str = "bn",
+        activation: str = "relu",
         small_input: bool = False,
     ):
         self.input_spec = InputSpec(shape=(None,) + inputs.shape)
@@ -36,9 +37,13 @@ class ResNet(Model):
         # Stem: 56x56
         stem = Sequential(name="stem")
         stride = 1 if small_input else 2
-        stem.add(Conv2dNormReLU(32, 3, stride, normalization="bn"))
-        stem.add(Conv2dNormReLU(32, 3, normalization="bn"))
-        stem.add(Conv2dNormReLU(64, 3, normalization="bn"))
+        stem.add(
+            Conv2dNormActivation(
+                32, 3, stride, norm="bn", activation=activation
+            )
+        )
+        stem.add(Conv2dNormActivation(32, 3, norm="bn", activation=activation))
+        stem.add(Conv2dNormActivation(64, 3, norm="bn", activation=activation))
         if not small_input:
             stem.add(MaxPool2D(3, 2, padding="same"))
         x = stem(inputs)
@@ -52,7 +57,8 @@ class ResNet(Model):
             1,
             groups,
             use_bottleneck,
-            normalization,
+            norm,
+            activation,
             "layer1",
         )
 
@@ -65,7 +71,8 @@ class ResNet(Model):
             2,
             groups,
             use_bottleneck,
-            normalization,
+            norm,
+            activation,
             "layer2",
         )
 
@@ -78,7 +85,8 @@ class ResNet(Model):
             2,
             groups,
             use_bottleneck,
-            normalization,
+            norm,
+            activation,
             "layer3",
         )
 
@@ -91,7 +99,8 @@ class ResNet(Model):
             2,
             groups,
             use_bottleneck,
-            normalization,
+            norm,
+            activation,
             "layer4",
         )
 
@@ -112,7 +121,8 @@ class ResNet(Model):
         strides: Union[int, Tuple[int, int]],
         groups: int,
         use_bottleneck: bool,
-        normalization: str = "bn",
+        norm: str = "bn",
+        activation: str = "relu",
         name: str = None,
     ):
         expansion = 4 if use_bottleneck else 1
@@ -121,7 +131,7 @@ class ResNet(Model):
             downsample = Sequential(
                 [
                     AvgPool2D(2, strides, padding="same"),
-                    Conv2dNorm(filters * expansion, 1, normalization="bn"),
+                    Conv2dNorm(filters * expansion, 1, norm="bn"),
                 ],
                 name=f"{name}_downsample",
             )
@@ -135,7 +145,8 @@ class ResNet(Model):
             width=width,
             strides=strides,
             groups=groups,
-            normalization=normalization,
+            norm=norm,
+            activation=activation,
             downsample=downsample,
             name=f"{name}_block_1",
         )
@@ -150,7 +161,8 @@ class ResNet(Model):
                 width=width,
                 strides=1,
                 groups=groups,
-                normalization=normalization,
+                norm=norm,
+                activation=activation,
                 downsample=None,
                 name=f"{name}_block_{idx + 1}",
             )
@@ -159,46 +171,65 @@ class ResNet(Model):
 
 
 def resnet18(
-    inputs, *, normalization: str = "bn", small_input: bool = False
+    inputs,
+    *,
+    norm: str = "bn",
+    activation: str = "relu",
+    small_input: bool = False,
 ) -> Model:
     model = ResNet(
         inputs,
         cfg=(2, 2, 2, 2),
         use_bottleneck=False,
-        normalization=normalization,
+        norm=norm,
+        activation=activation,
         small_input=small_input,
     )
     return model
 
 
 def resnet34(
-    inputs, *, normalization: str = "bn", small_input: bool = False
+    inputs,
+    *,
+    norm: str = "bn",
+    activation: str = "relu",
+    small_input: bool = False,
 ) -> Model:
     model = ResNet(
         inputs,
         cfg=(3, 4, 6, 3),
         use_bottleneck=False,
-        normalization=normalization,
+        norm=norm,
+        activation=activation,
         small_input=small_input,
     )
     return model
 
 
 def resnet50(
-    inputs, *, normalization: str = "bn", small_input: bool = False
+    inputs,
+    *,
+    norm: str = "bn",
+    activation: str = "relu",
+    small_input: bool = False,
 ) -> Model:
     model = ResNet(
         inputs,
         cfg=(3, 4, 6, 3),
         use_bottleneck=True,
-        normalization=normalization,
+        norm=norm,
+        activation=activation,
         small_input=small_input,
     )
     return model
 
 
 def resnext50_32x4d(
-    inputs, *, normalization: str = "bn", small_input: bool = False
+    inputs,
+    *,
+    norm: str = "bn",
+    activation: str = "relu",
+    small_input: bool = False,
 ) -> Model:
     model = ResNet(
         inputs,
@@ -206,33 +237,44 @@ def resnext50_32x4d(
         width=4,
         groups=32,
         use_bottleneck=True,
-        normalization=normalization,
+        norm=norm,
+        activation=activation,
         small_input=small_input,
     )
     return model
 
 
 def resnet101(
-    inputs, *, normalization: str = "bn", small_input: bool = False
+    inputs,
+    *,
+    norm: str = "bn",
+    activation: str = "relu",
+    small_input: bool = False,
 ) -> Model:
     model = ResNet(
         inputs,
         cfg=(3, 4, 23, 3),
         use_bottleneck=True,
-        normalization=normalization,
+        norm=norm,
+        activation=activation,
         small_input=small_input,
     )
     return model
 
 
 def resnet152(
-    inputs, *, normalization: str = "bn", small_input: bool = False
+    inputs,
+    *,
+    norm: str = "bn",
+    activation: str = "relu",
+    small_input: bool = False,
 ) -> Model:
     model = ResNet(
         inputs,
         cfg=(3, 8, 36, 3),
         use_bottleneck=True,
-        normalization=normalization,
+        norm=norm,
+        activation=activation,
         small_input=small_input,
     )
     return model

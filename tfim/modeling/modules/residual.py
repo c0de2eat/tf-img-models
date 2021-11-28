@@ -1,9 +1,9 @@
 from typing import Tuple, Union
 
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import add, ReLU
+from tensorflow.keras.layers import add
 
-from tfim.modeling.layers import Conv2dNorm, Conv2dNormReLU
+from tfim.modeling.layers import Activation, Conv2dNorm, Conv2dNormActivation
 
 
 __all__ = ["residual_block"]
@@ -17,7 +17,8 @@ def residual_block(
     width: int = 64,
     strides: Union[int, Tuple[int, int]] = (1, 1),
     groups: int = 1,
-    normalization: str = "bn",
+    norm: str = "bn",
+    activation: str = "relu",
     downsample: Union[Sequential, None] = None,
     name: str = None,
 ):
@@ -27,13 +28,15 @@ def residual_block(
 
     identity = x
     if use_bottleneck:
-        x = Bottleneck(filters, width, strides, groups, normalization, name)(x)
+        x = Bottleneck(
+            filters, width, strides, groups, norm, activation, name
+        )(x)
     else:
-        x = Residual(filters, strides, normalization, name)(x)
+        x = Residual(filters, strides, norm, activation, name)(x)
     if downsample is not None:
         identity = downsample(identity)
     x = add([x, identity])
-    x = ReLU()(x)
+    x = Activation(activation)(x)
     return x
 
 
@@ -42,18 +45,17 @@ def Bottleneck(
     width: int,
     strides: Union[int, Tuple[int, int]],
     groups: int,
-    normalization: str = "bn",
+    norm: str = "bn",
+    activation: str = "relu",
     name: str = None,
 ):
     return Sequential(
         [
-            Conv2dNormReLU(width, 1, normalization=normalization),
-            Conv2dNormReLU(
-                width, 3, strides=strides, groups=groups, normalization="bn"
+            Conv2dNormActivation(width, 1, norm=norm, activation=activation),
+            Conv2dNormActivation(
+                width, 3, strides=strides, groups=groups, norm="bn"
             ),
-            Conv2dNorm(
-                filters * 4, 1, normalization="bn", norm_weight_zero_init=True
-            ),
+            Conv2dNorm(filters * 4, 1, norm="bn", norm_weight_zero_init=True,),
         ],
         name=f"{name}_bottleneck",
     )
@@ -62,17 +64,16 @@ def Bottleneck(
 def Residual(
     filters: int,
     strides: Union[int, Tuple[int, int]],
-    normalization: str = "bn",
+    norm: str = "bn",
+    activation: str = "relu",
     name: str = None,
 ):
     return Sequential(
         [
-            Conv2dNormReLU(
-                filters, 3, strides=strides, normalization=normalization
+            Conv2dNormActivation(
+                filters, 3, strides=strides, norm=norm, activation=activation,
             ),
-            Conv2dNorm(
-                filters, 3, normalization="bn", norm_weight_zero_init=True
-            ),
+            Conv2dNorm(filters, 3, norm="bn", norm_weight_zero_init=True,),
         ],
         name=f"{name}_residual",
     )
