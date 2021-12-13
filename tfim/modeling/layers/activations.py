@@ -2,10 +2,10 @@ from tensorflow.keras.activations import relu, swish
 from tensorflow.keras.layers import Layer
 
 
-__all__ = ["Activation"]
+__all__ = ["Activations"]
 
 
-class Activation(Layer):
+class Activations(Layer):
     def __init__(self, name: str):
         super().__init__()
         if name == "relu":

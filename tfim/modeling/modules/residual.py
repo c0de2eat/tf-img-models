@@ -3,7 +3,7 @@ from typing import Tuple, Union
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import add
 
-from tfim.modeling.layers import Activation, Conv2dNorm, Conv2dNormActivation
+from tfim.modeling.layers import Activations, Conv2dNorm, Conv2dNormActivation
 
 
 __all__ = ["residual_block"]
@@ -36,7 +36,7 @@ def residual_block(
     if downsample is not None:
         identity = downsample(identity)
     x = add([x, identity])
-    x = Activation(activation)(x)
+    x = Activations(activation)(x)
     return x
 
 
@@ -55,7 +55,12 @@ def Bottleneck(
             Conv2dNormActivation(
                 width, 3, strides=strides, groups=groups, norm="bn"
             ),
-            Conv2dNorm(filters * 4, 1, norm="bn", norm_weight_zero_init=True,),
+            Conv2dNorm(
+                filters * 4,
+                1,
+                norm="bn",
+                norm_weight_zero_init=True,
+            ),
         ],
         name=f"{name}_bottleneck",
     )
@@ -71,9 +76,18 @@ def Residual(
     return Sequential(
         [
             Conv2dNormActivation(
-                filters, 3, strides=strides, norm=norm, activation=activation,
+                filters,
+                3,
+                strides=strides,
+                norm=norm,
+                activation=activation,
             ),
-            Conv2dNorm(filters, 3, norm="bn", norm_weight_zero_init=True,),
+            Conv2dNorm(
+                filters,
+                3,
+                norm="bn",
+                norm_weight_zero_init=True,
+            ),
         ],
         name=f"{name}_residual",
     )

@@ -3,7 +3,7 @@ from typing import Tuple, Union
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Conv2D
 
-from tfim.modeling.layers import Activation, get_normalization
+from tfim.modeling.layers import Activations, get_normalization
 
 
 __all__ = [
@@ -96,7 +96,7 @@ def Conv2dNormActivation(
         norm_weight_zero_init,
         name,
     )
-    conv.add(Activation(activation))
+    conv.add(Activations(activation))
     return conv
 
 
@@ -124,7 +124,7 @@ def Conv2dActivation(
                 use_bias,
                 kernel_initializer,
             ),
-            Activation(activation),
+            Activations(activation),
         ],
         name,
     )
